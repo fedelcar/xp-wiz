@@ -48,9 +48,13 @@ function parseIcs(icsText: string): ParsedFlight[] {
     const d = dtMatch[1];
     const date = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
 
+    // XP is zone-based (distance from Paris). For flights back to CDG/ORY,
+    // look up the non-Paris airport instead.
+    const PARIS = new Set(["CDG", "ORY"]);
+    const xpAirport = PARIS.has(destination) ? origin : destination;
     flights.push({
       date, origin, destination, airline, flightNum,
-      suggestedXp: suggestXp(destination, "economy", false),
+      suggestedXp: suggestXp(xpAirport, "economy", false),
     });
   }
 
