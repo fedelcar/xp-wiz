@@ -7,6 +7,7 @@ import { X, Wand2 } from "lucide-react";
 
 interface EntryFormProps {
   entry?: XpEntry | null;
+  defaultYear?: number;
   onSave: (data: Partial<XpEntry>) => Promise<void>;
   onCancel: () => void;
 }
@@ -15,9 +16,17 @@ const STATUSES: EntryStatus[] = ["completed", "scheduled", "planned"];
 const TYPES: EntryType[] = ["flight", "card", "bonus"];
 const CLASSES: CabinClass[] = ["economy", "comfort", "business", "first"];
 
-export function EntryForm({ entry, onSave, onCancel }: EntryFormProps) {
+function defaultDate(defaultYear?: number): string {
+  const now = new Date();
+  const y = defaultYear ?? now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export function EntryForm({ entry, defaultYear, onSave, onCancel }: EntryFormProps) {
   const [form, setForm] = useState({
-    date: entry?.date ?? new Date().toISOString().slice(0, 10),
+    date: entry?.date ?? defaultDate(defaultYear),
     destination: entry?.destination ?? "",
     isReturn: entry?.isReturn ?? false,
     status: (entry?.status ?? "planned") as EntryStatus,

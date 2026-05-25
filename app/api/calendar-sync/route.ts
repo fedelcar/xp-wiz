@@ -12,10 +12,13 @@ export interface CalendarFlight {
   airline: string;
   flightNum: string;
   suggestedXp: number | null;
+  exists: boolean;    // true if already in the tracker (same dest + month)
 }
 
-function parseIcs(icsText: string): CalendarFlight[] {
-  const flights: CalendarFlight[] = [];
+type ParsedFlight = Omit<CalendarFlight, "exists">;
+
+function parseIcs(icsText: string): ParsedFlight[] {
+  const flights: ParsedFlight[] = [];
 
   // Split on VEVENT boundaries
   const blocks = icsText.split(/BEGIN:VEVENT/);
@@ -87,15 +90,16 @@ export async function GET() {
     .from(xpEntries)
     .where(eq(xpEntries.userId, session.user.id));
 
-  // Deduplicate: same destination + same YYYY-MM
-  const newFlights = upcoming.filter((f) => {
+  // Annotate each flight: exists = same destination + same YYYY-MM already in tracker
+  const flights: CalendarFlight[] = upcoming.map((f) => {
     const fMonth = f.date.slice(0, 7);
-    return !existing.some(
+    const exists = existing.some(
       (e) =>
         e.destination.toUpperCase() === f.destination.toUpperCase() &&
         e.date.slice(0, 7) === fMonth
     );
+    return { ...f, exists };
   });
 
-  return NextResponse.json(newFlights);
+  return NextResponse.json(flights);
 }

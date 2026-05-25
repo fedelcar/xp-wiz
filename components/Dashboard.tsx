@@ -9,7 +9,7 @@ import { XPProgressBar } from "./XPProgressBar";
 import { EntriesTable } from "./EntriesTable";
 import { EntryForm } from "./EntryForm";
 import { SettingsPanel } from "./SettingsPanel";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, X } from "lucide-react";
 import type { CalendarFlight } from "@/app/api/calendar-sync/route";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -152,11 +152,11 @@ export function Dashboard() {
     }
   }
 
-  async function handleImportFlights(flights: CalendarFlight[]) {
+  async function handleImportFlights(flights: Array<CalendarFlight & { cabinClass: string }>) {
     setImporting(true);
+    const now = new Date();
     for (const f of flights) {
-      const xp = f.suggestedXp ?? 0;
-      const status = new Date(f.date) < new Date() ? "completed" : "scheduled";
+      const status = new Date(f.date) < now ? "completed" : "scheduled";
       await fetch("/api/entries", {
         method: "POST",
         body: JSON.stringify({
@@ -165,8 +165,8 @@ export function Dashboard() {
           isReturn: false,
           status,
           entryType: "flight",
-          cabinClass: "economy",
-          xp,
+          cabinClass: f.cabinClass,
+          xp: f.suggestedXp ?? 0,
         }),
         headers: { "Content-Type": "application/json" },
       });
@@ -226,6 +226,7 @@ export function Dashboard() {
         {showForm && (
           <EntryForm
             entry={editEntry}
+            defaultYear={editEntry ? undefined : activeYear}
             onSave={handleSaveEntry}
             onCancel={() => { setShowForm(false); setEditEntry(null); }}
           />
@@ -281,13 +282,13 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Calendar sync preview */}
+        {/* Calendar sync modal */}
         {syncPreview !== null && (
-          <CalendarSyncPreview
+          <CalendarSyncModal
             flights={syncPreview}
             importing={importing}
             onImport={handleImportFlights}
-            onDismiss={() => setSyncPreview(null)}
+            onClose={() => setSyncPreview(null)}
           />
         )}
 
@@ -307,60 +308,114 @@ export function Dashboard() {
   );
 }
 
-function CalendarSyncPreview({
+const CABIN_CLASSES = ["economy", "comfort", "business", "first"] as const;
+
+function CalendarSyncModal({
   flights,
   importing,
   onImport,
-  onDismiss,
+  onClose,
 }: {
   flights: CalendarFlight[];
   importing: boolean;
-  onImport: (flights: CalendarFlight[]) => void;
-  onDismiss: () => void;
+  onImport: (flights: Array<CalendarFlight & { cabinClass: string }>) => void;
+  onClose: () => void;
 }) {
-  if (flights.length === 0) {
-    return (
-      <div className="card p-4 border-l-4 border-l-af-sky flex items-center justify-between">
-        <p className="text-sm text-[rgb(var(--muted))]">No new flights found in your calendar.</p>
-        <button onClick={onDismiss} className="text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--text))]">Dismiss</button>
-      </div>
-    );
+  const [rows, setRows] = useState(
+    flights.map((f) => ({
+      ...f,
+      selected: !f.exists,
+      cabinClass: "economy" as string,
+    }))
+  );
+
+  function toggle(i: number) {
+    setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, selected: !r.selected } : r));
   }
 
+  function setCabin(i: number, cabin: string) {
+    setRows((prev) => prev.map((r, idx) => idx === i ? { ...r, cabinClass: cabin } : r));
+  }
+
+  const selected = rows.filter((r) => r.selected);
+
   return (
-    <div className="card p-4 border-l-4 border-l-af-sky space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold text-[rgb(var(--text))]">
-            {flights.length} new flight{flights.length !== 1 ? "s" : ""} from Flighty
-          </p>
-          <p className="text-xs text-[rgb(var(--muted))]">Economy class · edit after import if needed</p>
-        </div>
-        <button onClick={onDismiss} className="text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--text))]">Dismiss</button>
-      </div>
-
-      <div className="divide-y divide-[rgb(var(--border))]">
-        {flights.map((f) => (
-          <div key={`${f.date}-${f.destination}`} className="py-2 flex items-center justify-between text-sm">
-            <div className="flex items-center gap-3">
-              <span className="text-[rgb(var(--muted))] font-mono text-xs w-24">{f.date}</span>
-              <span className="font-medium text-[rgb(var(--text))]">{f.origin} → {f.destination}</span>
-              <span className="text-[rgb(var(--muted))] text-xs">{f.airline} {f.flightNum}</span>
-            </div>
-            <span className="text-xs font-mono text-af-sky">
-              {f.suggestedXp != null ? `+${f.suggestedXp} XP` : "XP TBD"}
-            </span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-[rgb(var(--surface))] rounded-2xl shadow-2xl w-full max-w-xl max-h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[rgb(var(--border))]">
+          <div>
+            <p className="font-semibold text-[rgb(var(--text))]">Flighty Calendar Sync</p>
+            <p className="text-xs text-[rgb(var(--muted))]">
+              {flights.length} flight{flights.length !== 1 ? "s" : ""} found · {selected.length} selected
+            </p>
           </div>
-        ))}
-      </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <X className="w-4 h-4 text-[rgb(var(--muted))]" />
+          </button>
+        </div>
 
-      <button
-        onClick={() => onImport(flights)}
-        disabled={importing}
-        className="btn-primary text-sm"
-      >
-        {importing ? "Importing…" : `Import ${flights.length} flight${flights.length !== 1 ? "s" : ""}`}
-      </button>
+        {/* Flight list */}
+        <div className="overflow-y-auto flex-1 divide-y divide-[rgb(var(--border))]">
+          {rows.length === 0 && (
+            <p className="px-5 py-8 text-center text-sm text-[rgb(var(--muted))]">No flights found in the next 12 months.</p>
+          )}
+          {rows.map((row, i) => (
+            <label key={`${row.date}-${row.destination}-${i}`} className="flex items-center gap-3 px-5 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              {/* Toggle */}
+              <input
+                type="checkbox"
+                checked={row.selected}
+                onChange={() => toggle(i)}
+                className="w-4 h-4 rounded accent-af-sky flex-shrink-0"
+              />
+
+              {/* Flight info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-mono text-[rgb(var(--muted))]">{row.date}</span>
+                  <span className="font-medium text-sm text-[rgb(var(--text))]">{row.origin} → {row.destination}</span>
+                  <span className="text-xs text-[rgb(var(--muted))]">{row.airline} {row.flightNum}</span>
+                  {row.exists && (
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400">
+                      already tracked
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Cabin class */}
+              <select
+                value={row.cabinClass}
+                onChange={(e) => { e.stopPropagation(); setCabin(i, e.target.value); }}
+                onClick={(e) => e.stopPropagation()}
+                className="text-xs border border-[rgb(var(--border))] rounded-md px-2 py-1 bg-[rgb(var(--surface))] text-[rgb(var(--text))] flex-shrink-0"
+              >
+                {CABIN_CLASSES.map((c) => (
+                  <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                ))}
+              </select>
+
+              {/* XP */}
+              <span className="text-xs font-mono text-af-sky w-14 text-right flex-shrink-0">
+                {row.suggestedXp != null ? `+${row.suggestedXp} XP` : "—"}
+              </span>
+            </label>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-t border-[rgb(var(--border))]">
+          <button onClick={onClose} className="btn-secondary text-sm">Cancel</button>
+          <button
+            onClick={() => onImport(selected)}
+            disabled={importing || selected.length === 0}
+            className="btn-primary text-sm disabled:opacity-50"
+          >
+            {importing ? "Importing…" : `Import ${selected.length} flight${selected.length !== 1 ? "s" : ""}`}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
