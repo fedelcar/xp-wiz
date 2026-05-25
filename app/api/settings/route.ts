@@ -20,14 +20,14 @@ export async function PUT(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { cutoffMonth, cutoffDay, activeYear, hiddenTiers } = await req.json();
+  const { cutoffMonth, cutoffDay, activeYear, hiddenTiers, calendarIcsUrl } = await req.json();
 
   const [updated] = await db
     .insert(userSettings)
-    .values({ userId: session.user.id, cutoffMonth, cutoffDay, activeYear, hiddenTiers: hiddenTiers ?? "" })
+    .values({ userId: session.user.id, cutoffMonth, cutoffDay, activeYear, hiddenTiers: hiddenTiers ?? "", calendarIcsUrl: calendarIcsUrl ?? null })
     .onConflictDoUpdate({
       target: userSettings.userId,
-      set: { cutoffMonth, cutoffDay, activeYear, hiddenTiers: hiddenTiers ?? "" },
+      set: { cutoffMonth, cutoffDay, activeYear, hiddenTiers: hiddenTiers ?? "", calendarIcsUrl: calendarIcsUrl ?? null },
     })
     .returning();
 

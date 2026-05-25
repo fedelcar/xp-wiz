@@ -8,7 +8,8 @@ interface SettingsPanelProps {
   cutoffMonth: number;
   cutoffDay: number;
   hiddenTiers: TierName[];
-  onSave: (month: number, day: number, hiddenTiers: TierName[]) => Promise<void>;
+  calendarIcsUrl?: string;
+  onSave: (month: number, day: number, hiddenTiers: TierName[], calendarIcsUrl: string) => Promise<void>;
   onClose: () => void;
 }
 
@@ -17,10 +18,11 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-export function SettingsPanel({ cutoffMonth, cutoffDay, hiddenTiers, onSave, onClose }: SettingsPanelProps) {
+export function SettingsPanel({ cutoffMonth, cutoffDay, hiddenTiers, calendarIcsUrl = "", onSave, onClose }: SettingsPanelProps) {
   const [month, setMonth] = useState(cutoffMonth);
   const [day, setDay] = useState(cutoffDay);
   const [hidden, setHidden] = useState<TierName[]>(hiddenTiers);
+  const [icsUrl, setIcsUrl] = useState(calendarIcsUrl);
   const [saving, setSaving] = useState(false);
 
   function toggleTier(name: TierName) {
@@ -31,7 +33,7 @@ export function SettingsPanel({ cutoffMonth, cutoffDay, hiddenTiers, onSave, onC
 
   async function handleSave() {
     setSaving(true);
-    await onSave(month, day, hidden);
+    await onSave(month, day, hidden, icsUrl);
     setSaving(false);
     onClose();
   }
@@ -110,6 +112,21 @@ export function SettingsPanel({ cutoffMonth, cutoffDay, hiddenTiers, onSave, onC
               );
             })}
           </div>
+        </div>
+
+        <div className="pt-1 border-t border-[rgb(var(--border))]">
+          <label className="label mb-1">Flighty / Google Calendar Sync</label>
+          <p className="text-xs text-[rgb(var(--muted))] mb-3">
+            Paste your Google Calendar private iCal URL (Calendar Settings → your calendar → &ldquo;Secret address in iCal format&rdquo;).
+            Flighty syncs flights there automatically.
+          </p>
+          <input
+            type="url"
+            className="input text-xs font-mono"
+            placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"
+            value={icsUrl}
+            onChange={(e) => setIcsUrl(e.target.value)}
+          />
         </div>
 
         <button

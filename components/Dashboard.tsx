@@ -9,7 +9,8 @@ import { XPProgressBar } from "./XPProgressBar";
 import { EntriesTable } from "./EntriesTable";
 import { EntryForm } from "./EntryForm";
 import { SettingsPanel } from "./SettingsPanel";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
+import type { CalendarFlight } from "@/app/api/calendar-sync/route";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const AVAILABLE_YEARS = [CURRENT_YEAR, CURRENT_YEAR + 1, CURRENT_YEAR + 2];
@@ -27,6 +28,9 @@ export function Dashboard() {
   const [showForm, setShowForm] = useState(false);
   const [editEntry, setEditEntry] = useState<XpEntry | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncPreview, setSyncPreview] = useState<CalendarFlight[] | null>(null);
+  const [importing, setImporting] = useState(false);
 
   // Seed + load on mount
   useEffect(() => {
@@ -56,6 +60,7 @@ export function Dashboard() {
       if (s.hiddenTiers) {
         setHiddenTiers(s.hiddenTiers.split(",").filter(Boolean) as TierName[]);
       }
+      // calendarIcsUrl is stored in settings but accessed via the settings panel directly
     }
   }, []);
 
@@ -119,14 +124,55 @@ export function Dashboard() {
     await loadEntries();
   }
 
-  async function handleSaveSettings(month: number, day: number, newHiddenTiers: TierName[]) {
+  async function handleSaveSettings(month: number, day: number, newHiddenTiers: TierName[], calendarIcsUrl: string) {
     await fetch("/api/settings", {
       method: "PUT",
-      body: JSON.stringify({ cutoffMonth: month, cutoffDay: day, activeYear, hiddenTiers: newHiddenTiers.join(",") }),
+      body: JSON.stringify({ cutoffMonth: month, cutoffDay: day, activeYear, hiddenTiers: newHiddenTiers.join(","), calendarIcsUrl }),
       headers: { "Content-Type": "application/json" },
     });
-    setSettings((s) => ({ ...s, cutoffMonth: month, cutoffDay: day }));
+    setSettings((s) => ({ ...s, cutoffMonth: month, cutoffDay: day, calendarIcsUrl }));
     setHiddenTiers(newHiddenTiers);
+  }
+
+  async function handleCalendarSync() {
+    setSyncing(true);
+    setSyncPreview(null);
+    try {
+      const res = await fetch("/api/calendar-sync");
+      if (!res.ok) {
+        const { error } = await res.json();
+        alert(error ?? "Sync failed");
+        return;
+      }
+      const flights: CalendarFlight[] = await res.json();
+      setSyncPreview(flights);
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  async function handleImportFlights(flights: CalendarFlight[]) {
+    setImporting(true);
+    for (const f of flights) {
+      const xp = f.suggestedXp ?? 0;
+      const status = new Date(f.date) < new Date() ? "completed" : "scheduled";
+      await fetch("/api/entries", {
+        method: "POST",
+        body: JSON.stringify({
+          date: f.date,
+          destination: f.destination,
+          isReturn: false,
+          status,
+          entryType: "flight",
+          cabinClass: "economy",
+          xp,
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    setSyncPreview(null);
+    setImporting(false);
+    await loadEntries();
   }
 
   function handleYearChange(y: number) {
@@ -169,6 +215,7 @@ export function Dashboard() {
             cutoffMonth={settings.cutoffMonth ?? 1}
             cutoffDay={settings.cutoffDay ?? 1}
             hiddenTiers={hiddenTiers}
+            calendarIcsUrl={settings.calendarIcsUrl ?? ""}
             onSave={handleSaveSettings}
             onClose={() => setShowSettings(false)}
           />
@@ -210,16 +257,38 @@ export function Dashboard() {
               {yearEntries.length} entries · year window: {settings.cutoffMonth}/{settings.cutoffDay}
             </p>
           </div>
-          {!showForm && (
-            <button
-              onClick={() => { setShowForm(true); setEditEntry(null); setShowSettings(false); }}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add Entry
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {settings.calendarIcsUrl && !showForm && (
+              <button
+                onClick={handleCalendarSync}
+                disabled={syncing}
+                className="btn-secondary flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+                {syncing ? "Syncing…" : "Sync Calendar"}
+              </button>
+            )}
+            {!showForm && (
+              <button
+                onClick={() => { setShowForm(true); setEditEntry(null); setShowSettings(false); }}
+                className="btn-primary flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Entry
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Calendar sync preview */}
+        {syncPreview !== null && (
+          <CalendarSyncPreview
+            flights={syncPreview}
+            importing={importing}
+            onImport={handleImportFlights}
+            onDismiss={() => setSyncPreview(null)}
+          />
+        )}
 
         {/* Entries table */}
         <EntriesTable
@@ -233,6 +302,64 @@ export function Dashboard() {
           <SafSummary entries={yearEntries} />
         )}
       </main>
+    </div>
+  );
+}
+
+function CalendarSyncPreview({
+  flights,
+  importing,
+  onImport,
+  onDismiss,
+}: {
+  flights: CalendarFlight[];
+  importing: boolean;
+  onImport: (flights: CalendarFlight[]) => void;
+  onDismiss: () => void;
+}) {
+  if (flights.length === 0) {
+    return (
+      <div className="card p-4 border-l-4 border-l-af-sky flex items-center justify-between">
+        <p className="text-sm text-[rgb(var(--muted))]">No new flights found in your calendar.</p>
+        <button onClick={onDismiss} className="text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--text))]">Dismiss</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card p-4 border-l-4 border-l-af-sky space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold text-[rgb(var(--text))]">
+            {flights.length} new flight{flights.length !== 1 ? "s" : ""} from Flighty
+          </p>
+          <p className="text-xs text-[rgb(var(--muted))]">Economy class · edit after import if needed</p>
+        </div>
+        <button onClick={onDismiss} className="text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--text))]">Dismiss</button>
+      </div>
+
+      <div className="divide-y divide-[rgb(var(--border))]">
+        {flights.map((f) => (
+          <div key={`${f.date}-${f.destination}`} className="py-2 flex items-center justify-between text-sm">
+            <div className="flex items-center gap-3">
+              <span className="text-[rgb(var(--muted))] font-mono text-xs w-24">{f.date}</span>
+              <span className="font-medium text-[rgb(var(--text))]">{f.origin} → {f.destination}</span>
+              <span className="text-[rgb(var(--muted))] text-xs">{f.airline} {f.flightNum}</span>
+            </div>
+            <span className="text-xs font-mono text-af-sky">
+              {f.suggestedXp != null ? `+${f.suggestedXp} XP` : "XP TBD"}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={() => onImport(flights)}
+        disabled={importing}
+        className="btn-primary text-sm"
+      >
+        {importing ? "Importing…" : `Import ${flights.length} flight${flights.length !== 1 ? "s" : ""}`}
+      </button>
     </div>
   );
 }

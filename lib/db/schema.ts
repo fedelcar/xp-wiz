@@ -101,6 +101,8 @@ export const userSettings = pgTable("user_settings", {
   activeYear: integer("active_year"),
   // Comma-separated tier names to hide, e.g. "Ultimate" or "Gold,Ultimate"
   hiddenTiers: text("hidden_tiers").default(""),
+  // Private iCal URL from Google Calendar (Flighty syncs flights here)
+  calendarIcsUrl: text("calendar_ics_url"),
 });
 
 export type XpEntry = typeof xpEntries.$inferSelect;
