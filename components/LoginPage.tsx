@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { Plane } from "lucide-react";
+import { XpLogo } from "./XpLogo";
 
 export function LoginPage() {
   return (
@@ -9,9 +9,7 @@ export function LoginPage() {
       <div className="text-center space-y-8 max-w-sm px-6">
         {/* Logo area */}
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-af-blue rounded-2xl flex items-center justify-center shadow-lg">
-            <Plane className="w-8 h-8 text-white" strokeWidth={1.5} />
-          </div>
+          <XpLogo size={64} />
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight">XP Wiz</h1>
             <p className="text-af-blue-light text-sm mt-1 font-medium">Flying Blue Status Tracker</p>

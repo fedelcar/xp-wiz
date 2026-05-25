@@ -8,7 +8,8 @@ import { EntryForm } from "./EntryForm";
 import { SettingsPanel } from "./SettingsPanel";
 import { SEED_ENTRIES, computeXpSummary, filterEntriesByYear } from "@/lib/xp-utils";
 import type { XpEntry } from "@/lib/db/schema";
-import { Moon, Sun, Plane, Settings, Plus } from "lucide-react";
+import { Moon, Sun, Settings, Plus } from "lucide-react";
+import { XpLogo } from "./XpLogo";
 import { useTheme } from "./ThemeProvider";
 
 const MOCK_ENTRIES: XpEntry[] = SEED_ENTRIES.map((e) => ({
@@ -32,12 +33,12 @@ const MOCK_ENTRIES: XpEntry[] = SEED_ENTRIES.map((e) => ({
 }));
 
 const CY = new Date().getFullYear();
-const YEARS = [CY - 1, CY, CY + 1];
+const YEARS = [CY, CY + 1, CY + 2];
 
 export function DashboardPreview() {
   const { theme, toggle } = useTheme();
   const [entries, setEntries] = useState<XpEntry[]>(MOCK_ENTRIES);
-  const [activeYear, setActiveYear] = useState(CY - 1);
+  const [activeYear, setActiveYear] = useState(CY);
   const [showForm, setShowForm] = useState(false);
   const [editEntry, setEditEntry] = useState<XpEntry | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -65,9 +66,7 @@ export function DashboardPreview() {
       <header className="sticky top-0 z-40 border-b bg-af-navy dark:bg-[#010d1f] border-af-navy-light">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-af-blue rounded-lg flex items-center justify-center">
-              <Plane className="w-4 h-4 text-white" strokeWidth={1.5} />
-            </div>
+            <XpLogo size={32} />
             <span className="font-bold text-white text-lg tracking-tight">XP Wiz</span>
             <span className="hidden sm:block text-af-blue-light text-xs font-medium">Flying Blue</span>
           </div>
@@ -81,7 +80,7 @@ export function DashboardPreview() {
                   activeYear === y ? "bg-af-red text-white" : "text-slate-300 hover:text-white hover:bg-white/10"
                 }`}
               >
-                {y + 1}
+                {y}
               </button>
             ))}
           </div>
