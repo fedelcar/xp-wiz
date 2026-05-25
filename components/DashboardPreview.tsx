@@ -102,6 +102,7 @@ export function DashboardPreview() {
           <SettingsPanel
             cutoffMonth={1}
             cutoffDay={1}
+            hiddenTiers={[]}
             onSave={async () => {}}
             onClose={() => setShowSettings(false)}
           />

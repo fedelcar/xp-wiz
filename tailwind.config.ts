@@ -11,12 +11,13 @@ const config: Config = {
     extend: {
       colors: {
         af: {
-          navy: "#002157",
-          blue: "#009BDE",
-          red: "#E2001A",
-          "navy-light": "#003580",
-          "blue-light": "#33B5E8",
-          "blue-dark": "#0072A3",
+          // Official Air France palette
+          navy: "#001E62",       // dark header bg
+          blue: "#002395",       // primary AF blue (French flag)
+          red: "#E2001A",        // primary AF red
+          "blue-mid": "#1A3FA6", // lighter blue for hover states
+          "blue-light": "#4D79FF", // light accent
+          sky: "#009BDE",        // sky blue for secondary elements
         },
       },
       fontFamily: {

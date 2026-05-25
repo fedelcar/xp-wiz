@@ -17,7 +17,7 @@ export function Header({ activeYear, availableYears, onYearChange, onOpenSetting
   const { theme, toggle } = useTheme();
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-af-navy dark:bg-[#010d1f] border-af-navy-light">
+    <header className="sticky top-0 z-40 border-b bg-af-navy dark:bg-[#010d1f] border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
@@ -29,7 +29,7 @@ export function Header({ activeYear, availableYears, onYearChange, onOpenSetting
         </div>
 
         {/* Year selector */}
-        <div className="flex items-center gap-1 bg-af-navy-light/50 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-white/10 rounded-lg p-1">
           {availableYears.map((y) => (
             <button
               key={y}
@@ -37,7 +37,7 @@ export function Header({ activeYear, availableYears, onYearChange, onOpenSetting
               className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                 activeYear === y
                   ? "bg-af-blue text-white"
-                  : "text-slate-300 hover:text-white hover:bg-af-navy-light"
+                  : "text-slate-300 hover:text-white hover:bg-white/10"
               }`}
             >
               {y}
@@ -49,7 +49,7 @@ export function Header({ activeYear, availableYears, onYearChange, onOpenSetting
         <div className="flex items-center gap-2">
           <button
             onClick={toggle}
-            className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-af-navy-light transition-colors"
+            className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
             aria-label="Toggle theme"
           >
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -57,7 +57,7 @@ export function Header({ activeYear, availableYears, onYearChange, onOpenSetting
 
           <button
             onClick={onOpenSettings}
-            className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-af-navy-light transition-colors"
+            className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
             aria-label="Settings"
           >
             <Settings className="w-4 h-4" />
@@ -75,7 +75,7 @@ export function Header({ activeYear, availableYears, onYearChange, onOpenSetting
 
           <button
             onClick={() => signOut()}
-            className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-af-navy-light transition-colors"
+            className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
             aria-label="Sign out"
           >
             <LogOut className="w-4 h-4" />

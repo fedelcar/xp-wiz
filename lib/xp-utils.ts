@@ -1,11 +1,17 @@
 import type { CabinClass, XpEntry } from "./db/schema";
 
 export const TIERS = [
-  { name: "Silver", xp: 100, color: "text-gray-400", bg: "bg-gray-400" },
-  { name: "Gold", xp: 180, color: "text-yellow-500", bg: "bg-yellow-500" },
-  { name: "Platinum", xp: 300, color: "text-teal-400", bg: "bg-teal-400" },
-  { name: "Ultimate", xp: 600, color: "text-purple-500", bg: "bg-purple-500" },
+  { name: "Silver",   xp: 100, color: "text-slate-400",  bg: "bg-slate-400" },
+  { name: "Gold",     xp: 180, color: "text-amber-400",  bg: "bg-amber-400" },
+  { name: "Platinum", xp: 300, color: "text-sky-400",    bg: "bg-sky-400" },
+  { name: "Ultimate", xp: 600, color: "text-af-red",     bg: "bg-af-red" },
 ] as const;
+
+export type TierName = (typeof TIERS)[number]["name"];
+
+export function getVisibleTiers(hiddenTiers: TierName[] = []) {
+  return TIERS.filter((t) => !hiddenTiers.includes(t.name));
+}
 
 export const MAX_DISPLAY_XP = 600;
 

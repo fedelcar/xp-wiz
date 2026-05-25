@@ -1,14 +1,16 @@
 "use client";
 
-import { TIERS, MAX_DISPLAY_XP } from "@/lib/xp-utils";
+import { getVisibleTiers, MAX_DISPLAY_XP, type TierName } from "@/lib/xp-utils";
 
 interface XPProgressBarProps {
   completed: number;
   withScheduled: number;
   withPlanned: number;
+  hiddenTiers?: TierName[];
 }
 
-export function XPProgressBar({ completed, withScheduled, withPlanned }: XPProgressBarProps) {
+export function XPProgressBar({ completed, withScheduled, withPlanned, hiddenTiers = [] }: XPProgressBarProps) {
+  const visibleTiers = getVisibleTiers(hiddenTiers);
   const cap = MAX_DISPLAY_XP;
   const scheduledOnly = withScheduled - completed;
   const plannedOnly = withPlanned - withScheduled;
@@ -63,7 +65,7 @@ export function XPProgressBar({ completed, withScheduled, withPlanned }: XPProgr
         </div>
 
         {/* Tier markers */}
-        {TIERS.map((tier) => {
+        {visibleTiers.map((tier) => {
           const pos = pct(tier.xp);
           if (pos > 99) return null;
           return (
@@ -80,10 +82,10 @@ export function XPProgressBar({ completed, withScheduled, withPlanned }: XPProgr
 
       {/* Tier labels + XP numbers */}
       <div className="relative h-8">
-        {TIERS.map((tier, i) => {
+        {visibleTiers.map((tier, i) => {
           const pos = pct(tier.xp);
           const reached = withPlanned >= tier.xp;
-          const isLast = i === TIERS.length - 1;
+          const isLast = i === visibleTiers.length - 1;
           return (
             <div
               key={tier.name}

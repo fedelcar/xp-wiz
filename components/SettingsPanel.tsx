@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { X, Save } from "lucide-react";
+import { TIERS, type TierName } from "@/lib/xp-utils";
 
 interface SettingsPanelProps {
   cutoffMonth: number;
   cutoffDay: number;
-  onSave: (month: number, day: number) => Promise<void>;
+  hiddenTiers: TierName[];
+  onSave: (month: number, day: number, hiddenTiers: TierName[]) => Promise<void>;
   onClose: () => void;
 }
 
@@ -15,20 +17,27 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-export function SettingsPanel({ cutoffMonth, cutoffDay, onSave, onClose }: SettingsPanelProps) {
+export function SettingsPanel({ cutoffMonth, cutoffDay, hiddenTiers, onSave, onClose }: SettingsPanelProps) {
   const [month, setMonth] = useState(cutoffMonth);
   const [day, setDay] = useState(cutoffDay);
+  const [hidden, setHidden] = useState<TierName[]>(hiddenTiers);
   const [saving, setSaving] = useState(false);
+
+  function toggleTier(name: TierName) {
+    setHidden((prev) =>
+      prev.includes(name) ? prev.filter((t) => t !== name) : [...prev, name]
+    );
+  }
 
   async function handleSave() {
     setSaving(true);
-    await onSave(month, day);
+    await onSave(month, day, hidden);
     setSaving(false);
     onClose();
   }
 
   return (
-    <div className="card p-5 border-l-4 border-l-af-navy">
+    <div className="card p-5 border-l-4 border-l-af-blue">
       <div className="flex items-center justify-between mb-5">
         <h3 className="font-semibold text-[rgb(var(--text))]">Settings</h3>
         <button onClick={onClose} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -75,19 +84,31 @@ export function SettingsPanel({ cutoffMonth, cutoffDay, onSave, onClose }: Setti
         </div>
 
         <div className="pt-1 border-t border-[rgb(var(--border))]">
-          <h4 className="text-xs font-semibold text-[rgb(var(--muted))] uppercase tracking-wide mb-3">Tier Thresholds</h4>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            {[
-              { name: "Silver", xp: 100, color: "text-gray-400" },
-              { name: "Gold", xp: 180, color: "text-yellow-500" },
-              { name: "Platinum", xp: 300, color: "text-teal-400" },
-              { name: "Ultimate", xp: 600, color: "text-purple-500" },
-            ].map((t) => (
-              <div key={t.name} className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800">
-                <span className={`font-medium ${t.color}`}>{t.name}</span>
-                <span className="text-[rgb(var(--muted))] font-mono text-xs">{t.xp} XP</span>
-              </div>
-            ))}
+          <label className="label mb-3">Visible Tiers</label>
+          <p className="text-xs text-[rgb(var(--muted))] mb-3">
+            Hide tiers you don't care about from the progress bar and metrics.
+          </p>
+          <div className="space-y-2">
+            {TIERS.map((tier) => {
+              const isVisible = !hidden.includes(tier.name);
+              return (
+                <label
+                  key={tier.name}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={isVisible}
+                      onChange={() => toggleTier(tier.name)}
+                      className="w-4 h-4 rounded accent-af-blue"
+                    />
+                    <span className={`font-medium text-sm ${tier.color}`}>{tier.name}</span>
+                  </div>
+                  <span className="text-[rgb(var(--muted))] font-mono text-xs">{tier.xp} XP</span>
+                </label>
+              );
+            })}
           </div>
         </div>
 

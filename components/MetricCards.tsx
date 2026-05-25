@@ -1,16 +1,18 @@
 "use client";
 
-import { TIERS } from "@/lib/xp-utils";
+import { getVisibleTiers, type TierName } from "@/lib/xp-utils";
 import { TrendingUp, CheckCircle, Calendar, Star } from "lucide-react";
 
 interface MetricCardsProps {
   completed: number;
   withScheduled: number;
   withPlanned: number;
+  hiddenTiers?: TierName[];
 }
 
-export function MetricCards({ completed, withScheduled, withPlanned }: MetricCardsProps) {
-  const nextUnreached = TIERS.find((t) => withPlanned < t.xp);
+export function MetricCards({ completed, withScheduled, withPlanned, hiddenTiers = [] }: MetricCardsProps) {
+  const visibleTiers = getVisibleTiers(hiddenTiers);
+  const nextUnreached = visibleTiers.find((t) => withPlanned < t.xp);
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -68,27 +70,29 @@ export function MetricCards({ completed, withScheduled, withPlanned }: MetricCar
       </div>
 
       {/* Tier gap details row */}
-      <div className="col-span-2 lg:col-span-4 card p-4">
-        <div className="grid grid-cols-4 gap-4">
-          {TIERS.map((tier) => {
-            const gap = Math.max(0, tier.xp - withPlanned);
-            const reached = withPlanned >= tier.xp;
+      {visibleTiers.length > 0 && (
+        <div className={`col-span-2 lg:col-span-4 card p-4`}>
+          <div className={`grid gap-4`} style={{ gridTemplateColumns: `repeat(${visibleTiers.length}, 1fr)` }}>
+            {visibleTiers.map((tier) => {
+              const gap = Math.max(0, tier.xp - withPlanned);
+              const reached = withPlanned >= tier.xp;
               return (
-              <div key={tier.name} className="text-center space-y-1">
-                <div className={`text-xs font-semibold uppercase tracking-widest ${tier.color}`}>
-                  {tier.name}
+                <div key={tier.name} className="text-center space-y-1">
+                  <div className={`text-xs font-semibold uppercase tracking-widest ${tier.color}`}>
+                    {tier.name}
+                  </div>
+                  <div className="text-xs text-[rgb(var(--muted))]">{tier.xp} XP</div>
+                  {reached ? (
+                    <div className="text-sm font-bold text-green-500">✓ Reached</div>
+                  ) : (
+                    <div className="text-sm font-bold text-[rgb(var(--text))]">−{gap} XP</div>
+                  )}
                 </div>
-                <div className="text-xs text-[rgb(var(--muted))]">{tier.xp} XP</div>
-                {reached ? (
-                  <div className="text-sm font-bold text-green-500">✓ Reached</div>
-                ) : (
-                  <div className="text-sm font-bold text-[rgb(var(--text))]">−{gap} XP</div>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

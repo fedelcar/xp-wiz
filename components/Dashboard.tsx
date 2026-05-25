@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { XpEntry, UserSettings } from "@/lib/db/schema";
-import { computeXpSummary, filterEntriesByYear } from "@/lib/xp-utils";
+import { computeXpSummary, filterEntriesByYear, type TierName } from "@/lib/xp-utils";
 import { Header } from "./Header";
 import { MetricCards } from "./MetricCards";
 import { XPProgressBar } from "./XPProgressBar";
@@ -23,6 +23,7 @@ export function Dashboard() {
   });
   const [activeYear, setActiveYear] = useState(CURRENT_YEAR);
   const [loading, setLoading] = useState(true);
+  const [hiddenTiers, setHiddenTiers] = useState<TierName[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editEntry, setEditEntry] = useState<XpEntry | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -49,6 +50,9 @@ export function Dashboard() {
       const s = await res.json();
       setSettings(s);
       if (s.activeYear) setActiveYear(s.activeYear);
+      if (s.hiddenTiers) {
+        setHiddenTiers(s.hiddenTiers.split(",").filter(Boolean) as TierName[]);
+      }
     }
   }, []);
 
@@ -95,13 +99,14 @@ export function Dashboard() {
     await loadEntries();
   }
 
-  async function handleSaveSettings(month: number, day: number) {
+  async function handleSaveSettings(month: number, day: number, newHiddenTiers: TierName[]) {
     await fetch("/api/settings", {
       method: "PUT",
-      body: JSON.stringify({ cutoffMonth: month, cutoffDay: day, activeYear }),
+      body: JSON.stringify({ cutoffMonth: month, cutoffDay: day, activeYear, hiddenTiers: newHiddenTiers.join(",") }),
       headers: { "Content-Type": "application/json" },
     });
     setSettings((s) => ({ ...s, cutoffMonth: month, cutoffDay: day }));
+    setHiddenTiers(newHiddenTiers);
   }
 
   function handleYearChange(y: number) {
@@ -143,6 +148,7 @@ export function Dashboard() {
           <SettingsPanel
             cutoffMonth={settings.cutoffMonth ?? 1}
             cutoffDay={settings.cutoffDay ?? 1}
+            hiddenTiers={hiddenTiers}
             onSave={handleSaveSettings}
             onClose={() => setShowSettings(false)}
           />
@@ -162,6 +168,7 @@ export function Dashboard() {
           completed={summary.completed}
           withScheduled={summary.withScheduled}
           withPlanned={summary.withPlanned}
+          hiddenTiers={hiddenTiers}
         />
 
         {/* Progress bar */}
@@ -169,6 +176,7 @@ export function Dashboard() {
           completed={summary.completed}
           withScheduled={summary.withScheduled}
           withPlanned={summary.withPlanned}
+          hiddenTiers={hiddenTiers}
         />
 
         {/* Table header row */}

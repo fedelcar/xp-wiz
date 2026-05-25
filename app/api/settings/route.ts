@@ -13,21 +13,21 @@ export async function GET() {
     .from(userSettings)
     .where(eq(userSettings.userId, session.user.id));
 
-  return NextResponse.json(settings ?? { cutoffMonth: 1, cutoffDay: 1, activeYear: new Date().getFullYear() });
+  return NextResponse.json(settings ?? { cutoffMonth: 1, cutoffDay: 1, activeYear: new Date().getFullYear(), hiddenTiers: "" });
 }
 
 export async function PUT(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { cutoffMonth, cutoffDay, activeYear } = await req.json();
+  const { cutoffMonth, cutoffDay, activeYear, hiddenTiers } = await req.json();
 
   const [updated] = await db
     .insert(userSettings)
-    .values({ userId: session.user.id, cutoffMonth, cutoffDay, activeYear })
+    .values({ userId: session.user.id, cutoffMonth, cutoffDay, activeYear, hiddenTiers: hiddenTiers ?? "" })
     .onConflictDoUpdate({
       target: userSettings.userId,
-      set: { cutoffMonth, cutoffDay, activeYear },
+      set: { cutoffMonth, cutoffDay, activeYear, hiddenTiers: hiddenTiers ?? "" },
     })
     .returning();
 

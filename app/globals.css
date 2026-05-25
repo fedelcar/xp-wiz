@@ -34,7 +34,7 @@
   }
 
   .btn-primary {
-    @apply bg-af-navy text-white hover:bg-af-navy-light px-4 py-2 rounded-lg font-medium text-sm transition-colors;
+    @apply bg-af-blue text-white hover:bg-af-blue-mid px-4 py-2 rounded-lg font-medium text-sm transition-colors;
   }
 
   .btn-secondary {
@@ -46,7 +46,7 @@
   }
 
   .input {
-    @apply w-full bg-[rgb(var(--surface))] border border-[rgb(var(--border))] rounded-lg px-3 py-2 text-sm text-[rgb(var(--text))] placeholder:text-[rgb(var(--muted))] focus:outline-none focus:ring-2 focus:ring-af-blue focus:border-transparent;
+    @apply w-full bg-[rgb(var(--surface))] border border-[rgb(var(--border))] rounded-lg px-3 py-2 text-sm text-[rgb(var(--text))] placeholder:text-[rgb(var(--muted))] focus:outline-none focus:ring-2 focus:ring-af-sky focus:border-transparent;
   }
 
   .label {

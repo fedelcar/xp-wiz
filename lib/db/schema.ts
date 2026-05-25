@@ -99,6 +99,8 @@ export const userSettings = pgTable("user_settings", {
   cutoffMonth: integer("cutoff_month").default(1),
   cutoffDay: integer("cutoff_day").default(1),
   activeYear: integer("active_year"),
+  // Comma-separated tier names to hide, e.g. "Ultimate" or "Gold,Ultimate"
+  hiddenTiers: text("hidden_tiers").default(""),
 });
 
 export type XpEntry = typeof xpEntries.$inferSelect;
