@@ -64,9 +64,11 @@ export function getYearWindow(
   cutoffMonth: number,
   cutoffDay: number
 ): YearWindow {
-  // The membership year for `year` runs from cutoff(year) to cutoff(year+1) - 1 day
-  const start = new Date(year, cutoffMonth - 1, cutoffDay);
-  const end = new Date(year + 1, cutoffMonth - 1, cutoffDay - 1);
+  // "Year N" = the membership period that ENDS at the cutoff date in year N.
+  // Runs from cutoff(N-1) up to (but not including) cutoff(N).
+  // e.g. with cutoff Oct 31: "2026" = Oct 31 2025 → Oct 30 2026
+  const start = new Date(year - 1, cutoffMonth - 1, cutoffDay);
+  const end = new Date(year, cutoffMonth - 1, cutoffDay - 1); // day 0 wraps to last day of prev month
   end.setHours(23, 59, 59, 999);
   return { start, end };
 }

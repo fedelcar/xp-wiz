@@ -1,10 +1,9 @@
 "use client";
 
 import { signOut, useSession } from "next-auth/react";
-import { Moon, Sun, LogOut, Settings } from "lucide-react";
+import { Moon, Sun, Plane, LogOut, Settings } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import Image from "next/image";
-import { XpLogo } from "./XpLogo";
 
 interface HeaderProps {
   activeYear: number;
@@ -22,7 +21,9 @@ export function Header({ activeYear, availableYears, onYearChange, onOpenSetting
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
-          <XpLogo size={32} />
+          <div className="w-8 h-8 bg-af-blue rounded-lg flex items-center justify-center">
+            <Plane className="w-4 h-4 text-white" strokeWidth={1.5} />
+          </div>
           <span className="font-bold text-white text-lg tracking-tight">XP Wiz</span>
           <span className="hidden sm:block text-af-blue-light text-xs font-medium">Flying Blue</span>
         </div>

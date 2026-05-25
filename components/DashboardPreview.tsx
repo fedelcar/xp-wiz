@@ -8,8 +8,7 @@ import { EntryForm } from "./EntryForm";
 import { SettingsPanel } from "./SettingsPanel";
 import { SEED_ENTRIES, computeXpSummary, filterEntriesByYear } from "@/lib/xp-utils";
 import type { XpEntry } from "@/lib/db/schema";
-import { Moon, Sun, Settings, Plus } from "lucide-react";
-import { XpLogo } from "./XpLogo";
+import { Moon, Sun, Plane, Settings, Plus } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
 const MOCK_ENTRIES: XpEntry[] = SEED_ENTRIES.map((e) => ({
@@ -63,10 +62,12 @@ export function DashboardPreview() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b bg-af-navy dark:bg-[#010d1f] border-af-navy-light">
+      <header className="sticky top-0 z-40 border-b bg-af-navy dark:bg-[#010d1f] border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <XpLogo size={32} />
+            <div className="w-8 h-8 bg-af-blue rounded-lg flex items-center justify-center">
+              <Plane className="w-4 h-4 text-white" strokeWidth={1.5} />
+            </div>
             <span className="font-bold text-white text-lg tracking-tight">XP Wiz</span>
             <span className="hidden sm:block text-af-blue-light text-xs font-medium">Flying Blue</span>
           </div>
@@ -86,10 +87,10 @@ export function DashboardPreview() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={toggle} className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-af-navy-light transition-colors">
+            <button onClick={toggle} className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors">
               {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
-            <button onClick={() => setShowSettings((s) => !s)} className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-af-navy-light transition-colors">
+            <button onClick={() => setShowSettings((s) => !s)} className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors">
               <Settings className="w-4 h-4" />
             </button>
             <div className="w-8 h-8 bg-af-blue rounded-full flex items-center justify-center text-white text-xs font-bold">P</div>
