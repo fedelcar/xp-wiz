@@ -310,6 +310,18 @@ export function Dashboard() {
 
 const CABIN_CLASSES = ["economy", "comfort", "business", "first"] as const;
 
+// Airlines that earn Flying Blue XP — everything else defaults to unselected
+const FB_XP_AIRLINES = new Set([
+  "AF", "KL",           // Air France, KLM
+  "TO", "HV",           // Transavia France, Transavia Netherlands
+  "KQ", "UX", "RO",     // Kenya Airways, Air Europa, TAROM
+  "G3", "CZ", "MF",     // GOL, China Southern, Xiamen Air
+  "VN", "MU", "KE",     // Vietnam Airlines, China Eastern, Korean Air
+  "AZ", "SV", "GA",     // ITA Airways, Saudia, Garuda Indonesia
+  "CI", "AM", "AR",     // China Airlines, Aeromexico, Aerolíneas Argentinas
+  "OK", "ME",           // Czech Airlines, MEA
+]);
+
 function CalendarSyncModal({
   flights,
   importing,
@@ -324,7 +336,7 @@ function CalendarSyncModal({
   const [rows, setRows] = useState(
     flights.map((f) => ({
       ...f,
-      selected: !f.exists,
+      selected: !f.exists && FB_XP_AIRLINES.has(f.airline),
       cabinClass: "economy" as string,
     }))
   );
