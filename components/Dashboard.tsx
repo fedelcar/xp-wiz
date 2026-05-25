@@ -161,6 +161,7 @@ export function Dashboard() {
         method: "POST",
         body: JSON.stringify({
           date: f.date,
+          origin: f.origin,
           destination: f.destination,
           isReturn: false,
           status,

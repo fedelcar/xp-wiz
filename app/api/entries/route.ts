@@ -52,13 +52,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const { date, destination, isReturn, status, entryType, cabinClass, returnCabinClass, xp, hasSaf, safXp, safCostEur, entryName, isRecurring } = body;
+  const { date, origin, destination, isReturn, status, entryType, cabinClass, returnCabinClass, xp, hasSaf, safXp, safCostEur, entryName, isRecurring } = body;
 
   const [entry] = await db
     .insert(xpEntries)
     .values({
       userId: session.user.id,
       date,
+      origin: origin ?? null,
       destination,
       isReturn: isReturn ?? false,
       status,

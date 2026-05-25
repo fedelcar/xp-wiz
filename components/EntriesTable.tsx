@@ -109,7 +109,11 @@ export function EntriesTable({ entries, onEdit, onDelete }: EntriesTableProps) {
                 </td>
                 <td className="px-4 py-3 font-semibold text-[rgb(var(--text))]">
                   <span className="flex items-center gap-1.5">
-                    {entry.entryName ?? entry.destination}
+                    {entry.entryName ?? (
+                      entry.origin
+                        ? <span className="font-mono">{entry.origin} <span className="text-[rgb(var(--muted))] font-normal">→</span> {entry.destination}</span>
+                        : entry.destination
+                    )}
                     {entry.hasSaf && (
                       <span title={`SAF: +${entry.safXp} XP${entry.safCostEur ? `, €${entry.safCostEur}` : ""}`}>
                         <Leaf className="w-3 h-3 text-emerald-500" />

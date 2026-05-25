@@ -73,6 +73,8 @@ export const xpEntries = pgTable("xp_entries", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   date: date("date").notNull(),
+  // For flights: departure airport code (e.g. "CDG"). Optional — not set for manually entered entries.
+  origin: text("origin"),
   // For flights: airport code (e.g. "DUB"). For cards/bonuses: source name.
   destination: text("destination").notNull(),
   isReturn: boolean("is_return").default(false),

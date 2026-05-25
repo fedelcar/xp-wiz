@@ -16,6 +16,7 @@ const MOCK_ENTRIES: XpEntry[] = SEED_ENTRIES.map((e) => ({
   id: e.id,
   userId: "preview",
   date: e.date,
+  origin: null,
   destination: e.destination,
   isReturn: e.isReturn,
   status: e.status as XpEntry["status"],
