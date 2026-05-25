@@ -23,11 +23,11 @@ export function XPProgressBar({ completed, withScheduled, withPlanned, hiddenTie
         <h2 className="text-sm font-semibold text-[rgb(var(--text))]">Status Progress</h2>
         <div className="flex items-center gap-4 text-xs text-[rgb(var(--muted))]">
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-af-red inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-af-sky inline-block" />
             Completed
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-af-red/40 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-af-sky/40 inline-block" />
             Scheduled
           </span>
           <span className="flex items-center gap-1.5">
@@ -51,14 +51,14 @@ export function XPProgressBar({ completed, withScheduled, withPlanned, hiddenTie
           {/* Scheduled layer */}
           {scheduledOnly > 0 && (
             <div
-              className="absolute h-full bg-af-red/40 rounded-lg transition-all duration-700"
+              className="absolute h-full bg-af-sky/40 rounded-lg transition-all duration-700"
               style={{ width: `${pct(withScheduled)}%` }}
             />
           )}
           {/* Completed layer */}
           {completed > 0 && (
             <div
-              className="absolute h-full bg-af-red rounded-lg transition-all duration-700"
+              className="absolute h-full bg-af-sky rounded-lg transition-all duration-700"
               style={{ width: `${pct(completed)}%` }}
             />
           )}
@@ -105,11 +105,11 @@ export function XPProgressBar({ completed, withScheduled, withPlanned, hiddenTie
       <div className="flex items-center gap-6 text-xs pt-1 border-t border-[rgb(var(--border))]">
         <div>
           <span className="text-[rgb(var(--muted))]">Completed: </span>
-          <span className="font-semibold text-af-red">{completed} XP</span>
+          <span className="font-semibold text-af-sky">{completed} XP</span>
         </div>
         <div>
           <span className="text-[rgb(var(--muted))]">+ Scheduled: </span>
-          <span className="font-semibold text-af-red/70">{scheduledOnly} XP</span>
+          <span className="font-semibold text-af-sky/70">{scheduledOnly} XP</span>
         </div>
         <div>
           <span className="text-[rgb(var(--muted))]">+ Planned: </span>

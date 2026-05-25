@@ -18,7 +18,7 @@ export function Header({ activeYear, availableYears, onYearChange, onOpenSetting
 
   return (
     <header className="sticky top-0 z-40 border-b bg-af-navy dark:bg-[#010d1f] border-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand */}
         <div className="flex items-center gap-2.5 flex-shrink-0">
           <div className="w-8 h-8 bg-af-blue rounded-lg flex items-center justify-center">
@@ -34,9 +34,9 @@ export function Header({ activeYear, availableYears, onYearChange, onOpenSetting
             <button
               key={y}
               onClick={() => onYearChange(y)}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+              className={`px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 activeYear === y
-                  ? "bg-af-red text-white"
+                  ? "bg-af-sky text-white"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
               }`}
             >

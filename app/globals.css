@@ -19,6 +19,11 @@
     --muted: 148 163 184;
   }
 
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
   body {
     @apply bg-[rgb(var(--bg))] text-[rgb(var(--text))] transition-colors duration-200;
   }
@@ -34,7 +39,7 @@
   }
 
   .btn-primary {
-    @apply bg-af-red text-white hover:bg-af-red/85 px-4 py-2 rounded-lg font-medium text-sm transition-colors;
+    @apply bg-af-sky text-white hover:bg-af-sky/85 px-4 py-2 rounded-lg font-medium text-sm transition-colors;
   }
 
   .btn-secondary {
