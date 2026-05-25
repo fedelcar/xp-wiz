@@ -101,7 +101,7 @@ export function EntriesTable({ entries, onEdit, onDelete }: EntriesTableProps) {
           <tbody className="divide-y divide-[rgb(var(--border))]">
             {sorted.map((entry) => (
               <tr
-                key={entry.id}
+                key={`${entry.id}-${entry.date}`}
                 className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group"
               >
                 <td className="px-4 py-3 font-mono text-xs text-[rgb(var(--muted))]">

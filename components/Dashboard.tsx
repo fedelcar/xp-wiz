@@ -63,7 +63,6 @@ export function Dashboard() {
     if (!entry.isRecurring || entry.entryType !== "card") return [entry];
     return AVAILABLE_YEARS.map((y) => ({
       ...entry,
-      id: entry.id * 1000 + y, // synthetic unique id for display
       date: `${y}-${entry.date.slice(5)}`,
     }));
   });
