@@ -27,11 +27,11 @@ export function XPProgressBar({ completed, withScheduled, withPlanned, hiddenTie
             Completed
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-af-sky/40 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-af-sky/50 inline-block" />
             Scheduled
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-amber-400/70 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-amber-400/60 inline-block" />
             Planned
           </span>
         </div>
@@ -41,25 +41,25 @@ export function XPProgressBar({ completed, withScheduled, withPlanned, hiddenTie
       <div className="relative">
         {/* Background track */}
         <div className="h-7 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
-          {/* Planned layer */}
+          {/* Planned segment — starts where scheduled ends */}
           {plannedOnly > 0 && (
             <div
-              className="absolute h-full bg-amber-400/50 rounded-lg transition-all duration-700"
-              style={{ width: `${pct(withPlanned)}%` }}
+              className="absolute h-full bg-amber-400/60 transition-all duration-700"
+              style={{ left: `${pct(withScheduled)}%`, width: `${pct(withPlanned) - pct(withScheduled)}%` }}
             />
           )}
-          {/* Scheduled layer */}
+          {/* Scheduled segment — starts where completed ends */}
           {scheduledOnly > 0 && (
             <div
-              className="absolute h-full bg-af-sky/40 rounded-lg transition-all duration-700"
-              style={{ width: `${pct(withScheduled)}%` }}
+              className="absolute h-full bg-af-sky/50 transition-all duration-700"
+              style={{ left: `${pct(completed)}%`, width: `${pct(withScheduled) - pct(completed)}%` }}
             />
           )}
-          {/* Completed layer */}
+          {/* Completed segment — always starts at 0 */}
           {completed > 0 && (
             <div
-              className="absolute h-full bg-af-sky rounded-lg transition-all duration-700"
-              style={{ width: `${pct(completed)}%` }}
+              className="absolute h-full bg-af-sky transition-all duration-700"
+              style={{ left: 0, width: `${pct(completed)}%` }}
             />
           )}
         </div>
