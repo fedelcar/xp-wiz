@@ -61,10 +61,13 @@ export function Dashboard() {
   // Expand recurring card entries across visible years
   const expandedEntries = entries.flatMap((entry): XpEntry[] => {
     if (!entry.isRecurring || entry.entryType !== "card") return [entry];
-    return AVAILABLE_YEARS.map((y) => ({
-      ...entry,
-      date: `${y}-${entry.date.slice(5)}`,
-    }));
+    const startYear = new Date(entry.date).getFullYear();
+    return AVAILABLE_YEARS
+      .filter((y) => y >= startYear)
+      .map((y) => ({
+        ...entry,
+        date: `${y}-${entry.date.slice(5)}`,
+      }));
   });
 
   const yearEntries = filterEntriesByYear(
