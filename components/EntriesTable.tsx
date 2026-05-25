@@ -150,7 +150,7 @@ export function EntriesTable({ entries, onEdit, onDelete }: EntriesTableProps) {
                   ) : null}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => onEdit(entry)}
                       className="p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
