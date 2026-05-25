@@ -11,7 +11,7 @@ interface XPProgressBarProps {
 
 export function XPProgressBar({ completed, withScheduled, withPlanned, hiddenTiers = [] }: XPProgressBarProps) {
   const visibleTiers = getVisibleTiers(hiddenTiers);
-  const cap = MAX_DISPLAY_XP;
+  const cap = visibleTiers.length > 0 ? visibleTiers[visibleTiers.length - 1].xp : MAX_DISPLAY_XP;
   const scheduledOnly = withScheduled - completed;
   const plannedOnly = withPlanned - withScheduled;
 
