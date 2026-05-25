@@ -32,10 +32,8 @@ export function Dashboard() {
   const [syncPreview, setSyncPreview] = useState<CalendarFlight[] | null>(null);
   const [importing, setImporting] = useState(false);
 
-  // Seed + load on mount
   useEffect(() => {
     async function init() {
-      await fetch("/api/entries", { method: "POST", body: JSON.stringify({ action: "seed" }), headers: { "Content-Type": "application/json" } });
       await loadEntries();
       await loadSettings();
       setLoading(false);
