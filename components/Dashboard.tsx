@@ -64,10 +64,11 @@ export function Dashboard() {
     }
   }, []);
 
-  // Expand recurring card entries across visible years
+  // Expand recurring card entries across visible years, starting from the entry's own year
   const expandedEntries = entries.flatMap((entry): XpEntry[] => {
     if (!entry.isRecurring || entry.entryType !== "card") return [entry];
-    return AVAILABLE_YEARS.map((y) => ({
+    const entryYear = parseInt(entry.date.slice(0, 4)); // timezone-safe string parse
+    return AVAILABLE_YEARS.filter((y) => y >= entryYear).map((y) => ({
       ...entry,
       date: `${y}-${entry.date.slice(5)}`,
     }));
