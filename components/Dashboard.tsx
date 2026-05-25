@@ -12,7 +12,7 @@ import { SettingsPanel } from "./SettingsPanel";
 import { Plus } from "lucide-react";
 
 const CURRENT_YEAR = new Date().getFullYear();
-const AVAILABLE_YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1];
+const AVAILABLE_YEARS = [CURRENT_YEAR, CURRENT_YEAR + 1, CURRENT_YEAR + 2];
 
 export function Dashboard() {
   const [entries, setEntries] = useState<XpEntry[]>([]);

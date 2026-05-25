@@ -30,7 +30,7 @@ const MOCK_ENTRIES: XpEntry[] = SEED_ENTRIES.map((e) => ({
   createdAt: new Date(),
 }));
 
-const YEARS = [2025, 2026, 2027];
+const YEARS = [new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() + 2];
 
 export function DashboardPreview() {
   const { theme, toggle } = useTheme();
