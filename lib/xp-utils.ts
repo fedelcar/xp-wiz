@@ -36,14 +36,16 @@ const CLASS_MULTIPLIERS: Record<CabinClass, number> = {
 
 export function suggestXp(
   destination: string,
-  cabinClass: CabinClass,
-  isReturn: boolean
+  outboundClass: CabinClass,
+  isReturn: boolean,
+  returnClass?: CabinClass
 ): number | null {
   const base = ZONE_XP[destination.toUpperCase()];
   if (!base) return null;
-  const multiplier = CLASS_MULTIPLIERS[cabinClass];
-  const legs = isReturn ? 2 : 1;
-  return base * multiplier * legs;
+  const outXp = base * CLASS_MULTIPLIERS[outboundClass];
+  if (!isReturn) return outXp;
+  const retXp = base * CLASS_MULTIPLIERS[returnClass ?? outboundClass];
+  return outXp + retXp;
 }
 
 export interface YearWindow {

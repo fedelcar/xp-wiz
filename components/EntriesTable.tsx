@@ -30,7 +30,7 @@ const CLASS_LABEL: Record<string, string> = {
   economy: "Eco",
   comfort: "Cmft",
   business: "Biz",
-  first: "First",
+  first: "1st",
 };
 
 export function EntriesTable({ entries, onEdit, onDelete }: EntriesTableProps) {
@@ -127,8 +127,16 @@ export function EntriesTable({ entries, onEdit, onDelete }: EntriesTableProps) {
                     <span className="text-[rgb(var(--muted))]">→</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-[rgb(var(--muted))] text-xs">
-                  {entry.cabinClass ? CLASS_LABEL[entry.cabinClass] : "—"}
+                <td className="px-4 py-3 text-[rgb(var(--muted))] text-xs whitespace-nowrap">
+                  {entry.cabinClass
+                    ? entry.returnCabinClass && entry.returnCabinClass !== entry.cabinClass
+                      ? <span title={`Outbound: ${entry.cabinClass} / Return: ${entry.returnCabinClass}`}>
+                          {CLASS_LABEL[entry.cabinClass]}
+                          <span className="text-[rgb(var(--border))] mx-0.5">/</span>
+                          {CLASS_LABEL[entry.returnCabinClass]}
+                        </span>
+                      : CLASS_LABEL[entry.cabinClass]
+                    : "—"}
                 </td>
                 <td className="px-4 py-3">
                   <span className={`badge ${STATUS_BADGE[entry.status ?? "planned"]}`}>

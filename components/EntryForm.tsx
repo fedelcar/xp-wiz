@@ -23,6 +23,7 @@ export function EntryForm({ entry, onSave, onCancel }: EntryFormProps) {
     status: (entry?.status ?? "planned") as EntryStatus,
     entryType: (entry?.entryType ?? "flight") as EntryType,
     cabinClass: (entry?.cabinClass ?? "economy") as CabinClass,
+    returnCabinClass: (entry?.returnCabinClass ?? null) as CabinClass | null,
     xp: entry?.xp ?? 0,
     hasSaf: entry?.hasSaf ?? false,
     safXp: entry?.safXp ?? 0,
@@ -36,9 +37,9 @@ export function EntryForm({ entry, onSave, onCancel }: EntryFormProps) {
   // Re-compute XP suggestion whenever destination / class / return changes
   useEffect(() => {
     if (form.entryType !== "flight") { setSuggestedXp(null); return; }
-    const s = suggestXp(form.destination, form.cabinClass, form.isReturn);
+    const s = suggestXp(form.destination, form.cabinClass, form.isReturn, form.returnCabinClass ?? undefined);
     setSuggestedXp(s);
-  }, [form.destination, form.cabinClass, form.isReturn, form.entryType]);
+  }, [form.destination, form.cabinClass, form.returnCabinClass, form.isReturn, form.entryType]);
 
   function set<K extends keyof typeof form>(key: K, val: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: val }));
@@ -54,6 +55,8 @@ export function EntryForm({ entry, onSave, onCancel }: EntryFormProps) {
       status: form.status,
       entryType: form.entryType,
       cabinClass: form.entryType === "flight" ? form.cabinClass : undefined,
+      returnCabinClass: (form.entryType === "flight" && form.isReturn && form.returnCabinClass)
+        ? form.returnCabinClass : undefined,
       xp: form.xp,
       hasSaf: form.entryType === "flight" ? form.hasSaf : false,
       safXp: form.hasSaf ? form.safXp : 0,
@@ -139,7 +142,9 @@ export function EntryForm({ entry, onSave, onCancel }: EntryFormProps) {
             </div>
 
             <div>
-              <label className="label">Cabin</label>
+              <label className="label">
+                {form.isReturn ? "Outbound cabin" : "Cabin"}
+              </label>
               <select
                 className="input"
                 value={form.cabinClass}
@@ -153,17 +158,67 @@ export function EntryForm({ entry, onSave, onCancel }: EntryFormProps) {
               </select>
             </div>
 
-            <div className="flex flex-col justify-end gap-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="rounded border-slate-300"
-                  checked={form.isReturn}
-                  onChange={(e) => set("isReturn", e.target.checked)}
-                />
-                <span className="text-sm text-[rgb(var(--text))]">Return trip</span>
-              </label>
-            </div>
+            {/* Return cabin — shown only for return trips */}
+            {form.isReturn ? (
+              <div>
+                <label className="label flex items-center gap-1">
+                  Return cabin
+                  {form.returnCabinClass && (
+                    <button
+                      type="button"
+                      onClick={() => set("returnCabinClass", null)}
+                      className="ml-auto text-[rgb(var(--muted))] hover:text-[rgb(var(--text))] text-[10px] normal-case font-normal"
+                    >
+                      same as outbound
+                    </button>
+                  )}
+                </label>
+                <select
+                  className="input"
+                  value={form.returnCabinClass ?? form.cabinClass}
+                  onChange={(e) => {
+                    const val = e.target.value as CabinClass;
+                    set("returnCabinClass", val === form.cabinClass ? null : val);
+                  }}
+                >
+                  {CLASSES.map((c) => (
+                    <option key={c} value={c}>
+                      {c.charAt(0).toUpperCase() + c.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="flex flex-col justify-end gap-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="rounded border-slate-300"
+                    checked={form.isReturn}
+                    onChange={(e) => set("isReturn", e.target.checked)}
+                  />
+                  <span className="text-sm text-[rgb(var(--text))]">Return trip</span>
+                </label>
+              </div>
+            )}
+
+            {/* Return trip checkbox moves here when isReturn=true */}
+            {form.isReturn && (
+              <div className="flex flex-col justify-end gap-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="rounded border-slate-300"
+                    checked={form.isReturn}
+                    onChange={(e) => {
+                      set("isReturn", e.target.checked);
+                      if (!e.target.checked) set("returnCabinClass", null);
+                    }}
+                  />
+                  <span className="text-sm text-[rgb(var(--text))]">Return trip</span>
+                </label>
+              </div>
+            )}
 
             <div>
               <label className="label flex items-center gap-1">

@@ -22,6 +22,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       status: body.status,
       entryType: body.entryType,
       cabinClass: body.cabinClass,
+      returnCabinClass: body.returnCabinClass ?? null,
       xp: body.xp,
       hasSaf: body.hasSaf,
       safXp: body.safXp,

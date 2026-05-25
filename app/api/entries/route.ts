@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  const { date, destination, isReturn, status, entryType, cabinClass, xp, hasSaf, safXp, safCostEur, entryName, isRecurring } = body;
+  const { date, destination, isReturn, status, entryType, cabinClass, returnCabinClass, xp, hasSaf, safXp, safCostEur, entryName, isRecurring } = body;
 
   const [entry] = await db
     .insert(xpEntries)
@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
       status,
       entryType: entryType ?? "flight",
       cabinClass,
+      returnCabinClass: returnCabinClass ?? null,
       xp,
       hasSaf: hasSaf ?? false,
       safXp: safXp ?? 0,

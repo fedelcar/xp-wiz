@@ -21,6 +21,7 @@ const MOCK_ENTRIES: XpEntry[] = SEED_ENTRIES.map((e) => ({
   status: e.status as XpEntry["status"],
   entryType: e.entryType as XpEntry["entryType"],
   cabinClass: null,
+  returnCabinClass: null,
   xp: e.xp,
   hasSaf: false,
   safXp: 0,

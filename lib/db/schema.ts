@@ -79,6 +79,7 @@ export const xpEntries = pgTable("xp_entries", {
   status: text("status").$type<EntryStatus>().notNull().default("planned"),
   entryType: text("entry_type").$type<EntryType>().notNull().default("flight"),
   cabinClass: text("cabin_class").$type<CabinClass>(),
+  returnCabinClass: text("return_cabin_class").$type<CabinClass>(), // only set when different from outbound
   xp: integer("xp").notNull(),
   // SAF (Sustainable Aviation Fuel) - only relevant for flights
   hasSaf: boolean("has_saf").default(false),
