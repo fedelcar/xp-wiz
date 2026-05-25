@@ -31,12 +31,13 @@ const MOCK_ENTRIES: XpEntry[] = SEED_ENTRIES.map((e) => ({
   createdAt: new Date(),
 }));
 
-const YEARS = [new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() + 2];
+const CY = new Date().getFullYear();
+const YEARS = [CY - 1, CY, CY + 1];
 
 export function DashboardPreview() {
   const { theme, toggle } = useTheme();
   const [entries, setEntries] = useState<XpEntry[]>(MOCK_ENTRIES);
-  const [activeYear, setActiveYear] = useState(2026);
+  const [activeYear, setActiveYear] = useState(CY - 1);
   const [showForm, setShowForm] = useState(false);
   const [editEntry, setEditEntry] = useState<XpEntry | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -71,16 +72,16 @@ export function DashboardPreview() {
             <span className="hidden sm:block text-af-blue-light text-xs font-medium">Flying Blue</span>
           </div>
 
-          <div className="flex items-center gap-1 bg-af-navy-light/50 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-white/10 rounded-lg p-1">
             {YEARS.map((y) => (
               <button
                 key={y}
                 onClick={() => setActiveYear(y)}
                 className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                  activeYear === y ? "bg-af-blue text-white" : "text-slate-300 hover:text-white hover:bg-af-navy-light"
+                  activeYear === y ? "bg-af-red text-white" : "text-slate-300 hover:text-white hover:bg-white/10"
                 }`}
               >
-                {y}
+                {y + 1}
               </button>
             ))}
           </div>

@@ -12,7 +12,8 @@ import { SettingsPanel } from "./SettingsPanel";
 import { Plus } from "lucide-react";
 
 const CURRENT_YEAR = new Date().getFullYear();
-const AVAILABLE_YEARS = [CURRENT_YEAR, CURRENT_YEAR + 1, CURRENT_YEAR + 2];
+// Filter years: one behind display so label "2026" shows the window that ends in 2026
+const AVAILABLE_YEARS = [CURRENT_YEAR - 1, CURRENT_YEAR, CURRENT_YEAR + 1];
 
 export function Dashboard() {
   const [entries, setEntries] = useState<XpEntry[]>([]);
@@ -21,7 +22,7 @@ export function Dashboard() {
     cutoffDay: 1,
     activeYear: CURRENT_YEAR,
   });
-  const [activeYear, setActiveYear] = useState(CURRENT_YEAR);
+  const [activeYear, setActiveYear] = useState(CURRENT_YEAR - 1);
   const [loading, setLoading] = useState(true);
   const [hiddenTiers, setHiddenTiers] = useState<TierName[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -49,7 +50,8 @@ export function Dashboard() {
     if (res.ok) {
       const s = await res.json();
       setSettings(s);
-      if (s.activeYear) setActiveYear(s.activeYear);
+      // DB stores display year (e.g. 2026); internally we use filter year (display - 1)
+      if (s.activeYear) setActiveYear(s.activeYear - 1);
       if (s.hiddenTiers) {
         setHiddenTiers(s.hiddenTiers.split(",").filter(Boolean) as TierName[]);
       }
@@ -102,7 +104,7 @@ export function Dashboard() {
   async function handleSaveSettings(month: number, day: number, newHiddenTiers: TierName[]) {
     await fetch("/api/settings", {
       method: "PUT",
-      body: JSON.stringify({ cutoffMonth: month, cutoffDay: day, activeYear, hiddenTiers: newHiddenTiers.join(",") }),
+      body: JSON.stringify({ cutoffMonth: month, cutoffDay: day, activeYear: activeYear + 1, hiddenTiers: newHiddenTiers.join(",") }),
       headers: { "Content-Type": "application/json" },
     });
     setSettings((s) => ({ ...s, cutoffMonth: month, cutoffDay: day }));
@@ -113,7 +115,7 @@ export function Dashboard() {
     setActiveYear(y);
     fetch("/api/settings", {
       method: "PUT",
-      body: JSON.stringify({ ...settings, activeYear: y }),
+      body: JSON.stringify({ ...settings, activeYear: y + 1 }), // save display year
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -183,7 +185,7 @@ export function Dashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-semibold text-[rgb(var(--text))]">
-              {activeYear} Entries
+              {activeYear + 1} Entries
             </h2>
             <p className="text-xs text-[rgb(var(--muted))] mt-0.5">
               {yearEntries.length} entries · year window: {settings.cutoffMonth}/{settings.cutoffDay}

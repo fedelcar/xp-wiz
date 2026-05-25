@@ -36,11 +36,11 @@ export function Header({ activeYear, availableYears, onYearChange, onOpenSetting
               onClick={() => onYearChange(y)}
               className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                 activeYear === y
-                  ? "bg-af-blue text-white"
+                  ? "bg-af-red text-white"
                   : "text-slate-300 hover:text-white hover:bg-white/10"
               }`}
             >
-              {y}
+              {y + 1}
             </button>
           ))}
         </div>
