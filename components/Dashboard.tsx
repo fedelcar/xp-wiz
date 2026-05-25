@@ -62,13 +62,10 @@ export function Dashboard() {
   // Expand recurring card entries across visible years
   const expandedEntries = entries.flatMap((entry): XpEntry[] => {
     if (!entry.isRecurring || entry.entryType !== "card") return [entry];
-    const startYear = new Date(entry.date).getFullYear();
-    return AVAILABLE_YEARS
-      .filter((y) => y >= startYear)
-      .map((y) => ({
-        ...entry,
-        date: `${y}-${entry.date.slice(5)}`,
-      }));
+    return AVAILABLE_YEARS.map((y) => ({
+      ...entry,
+      date: `${y}-${entry.date.slice(5)}`,
+    }));
   });
 
   const yearEntries = filterEntriesByYear(
@@ -78,7 +75,21 @@ export function Dashboard() {
     settings.cutoffDay ?? 1
   );
 
-  const summary = computeXpSummary(yearEntries);
+  // XP surplus over 300 (Platinum) from previous year carries over
+  const prevYearEntries = filterEntriesByYear(
+    expandedEntries,
+    activeYear - 1,
+    settings.cutoffMonth ?? 1,
+    settings.cutoffDay ?? 1
+  );
+  const carryoverXp = Math.max(0, computeXpSummary(prevYearEntries).completed - 300);
+
+  const rawSummary = computeXpSummary(yearEntries);
+  const summary = {
+    completed: rawSummary.completed + carryoverXp,
+    withScheduled: rawSummary.withScheduled + carryoverXp,
+    withPlanned: rawSummary.withPlanned + carryoverXp,
+  };
 
   async function handleSaveEntry(data: Partial<XpEntry>) {
     if (editEntry) {
@@ -178,6 +189,7 @@ export function Dashboard() {
           withScheduled={summary.withScheduled}
           withPlanned={summary.withPlanned}
           hiddenTiers={hiddenTiers}
+          carryoverXp={carryoverXp}
         />
 
         {/* Progress bar */}

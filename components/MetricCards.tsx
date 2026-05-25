@@ -8,9 +8,10 @@ interface MetricCardsProps {
   withScheduled: number;
   withPlanned: number;
   hiddenTiers?: TierName[];
+  carryoverXp?: number;
 }
 
-export function MetricCards({ completed, withScheduled, withPlanned, hiddenTiers = [] }: MetricCardsProps) {
+export function MetricCards({ completed, withScheduled, withPlanned, hiddenTiers = [], carryoverXp = 0 }: MetricCardsProps) {
   const visibleTiers = getVisibleTiers(hiddenTiers);
   const nextUnreached = visibleTiers.find((t) => withPlanned < t.xp);
 
@@ -23,7 +24,14 @@ export function MetricCards({ completed, withScheduled, withPlanned, hiddenTiers
           <CheckCircle className="w-4 h-4 text-green-500" />
         </div>
         <div className="text-3xl font-bold text-[rgb(var(--text))] tabular-nums">{completed}</div>
-        <div className="text-xs text-[rgb(var(--muted))]">Completed flights &amp; bonuses</div>
+        {carryoverXp > 0 ? (
+          <div className="text-xs text-[rgb(var(--muted))]">
+            {completed - carryoverXp} earned{" "}
+            <span className="text-amber-500 font-medium">+{carryoverXp} rollover</span>
+          </div>
+        ) : (
+          <div className="text-xs text-[rgb(var(--muted))]">Completed flights &amp; bonuses</div>
+        )}
       </div>
 
       {/* With Scheduled */}
