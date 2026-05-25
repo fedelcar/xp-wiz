@@ -42,10 +42,13 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
+  console.log(`DELETE /api/entries/${id} userId=${session.user.id}`);
 
-  await db
+  const deleted = await db
     .delete(xpEntries)
-    .where(and(eq(xpEntries.id, parseInt(id)), eq(xpEntries.userId, session.user.id)));
+    .where(and(eq(xpEntries.id, parseInt(id)), eq(xpEntries.userId, session.user.id)))
+    .returning();
 
-  return NextResponse.json({ ok: true });
+  console.log(`Deleted ${deleted.length} row(s) for id=${id}`);
+  return NextResponse.json({ ok: true, deleted: deleted.length });
 }

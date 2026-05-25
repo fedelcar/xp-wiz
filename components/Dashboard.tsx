@@ -41,7 +41,7 @@ export function Dashboard() {
   }, []);
 
   const loadEntries = useCallback(async () => {
-    const res = await fetch("/api/entries");
+    const res = await fetch("/api/entries", { cache: "no-store" });
     if (res.ok) setEntries(await res.json());
   }, []);
 
@@ -97,7 +97,11 @@ export function Dashboard() {
   }
 
   async function handleDelete(id: number) {
-    await fetch(`/api/entries/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/entries/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const body = await res.text();
+      alert(`Delete failed (${res.status}): ${body}`);
+    }
     await loadEntries();
   }
 
