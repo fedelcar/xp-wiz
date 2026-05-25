@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: 248 250 252;
+    --surface: 255 255 255;
+    --border: 226 232 240;
+    --text: 15 23 42;
+    --muted: 100 116 139;
+  }
+
+  .dark {
+    --bg: 10 15 28;
+    --surface: 17 24 40;
+    --border: 30 41 59;
+    --text: 241 245 249;
+    --muted: 148 163 184;
+  }
+
+  body {
+    @apply bg-[rgb(var(--bg))] text-[rgb(var(--text))] transition-colors duration-200;
+  }
+
+  * {
+    @apply border-[rgb(var(--border))];
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-[rgb(var(--surface))] rounded-xl border border-[rgb(var(--border))] shadow-sm;
+  }
+
+  .btn-primary {
+    @apply bg-af-navy text-white hover:bg-af-navy-light px-4 py-2 rounded-lg font-medium text-sm transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-[rgb(var(--surface))] border border-[rgb(var(--border))] text-[rgb(var(--text))] hover:bg-slate-50 dark:hover:bg-slate-800 px-4 py-2 rounded-lg font-medium text-sm transition-colors;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .input {
+    @apply w-full bg-[rgb(var(--surface))] border border-[rgb(var(--border))] rounded-lg px-3 py-2 text-sm text-[rgb(var(--text))] placeholder:text-[rgb(var(--muted))] focus:outline-none focus:ring-2 focus:ring-af-blue focus:border-transparent;
+  }
+
+  .label {
+    @apply block text-xs font-medium text-[rgb(var(--muted))] mb-1 uppercase tracking-wide;
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "xp-wiz",
+      "runtimeExecutable": "/Users/fedelc/.nvm/versions/node/v20.19.6/bin/node",
+      "runtimeArgs": ["/Users/fedelc/Desktop/xp-wiz/node_modules/.bin/next", "dev"],
+      "port": 3000
+    }
+  ]
+}
