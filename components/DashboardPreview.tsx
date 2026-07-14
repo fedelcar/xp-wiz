@@ -125,6 +125,7 @@ export function DashboardPreview() {
         />
 
         <XPProgressBar
+          entries={yearEntries}
           completed={summary.completed}
           withScheduled={summary.withScheduled}
           withPlanned={summary.withPlanned}
@@ -150,6 +151,8 @@ export function DashboardPreview() {
           entries={yearEntries}
           onEdit={(e) => { setEditEntry(e); setShowForm(true); setShowSettings(false); }}
           onDelete={handleDelete}
+          onStatusChange={async () => {}}
+          onFieldChange={async () => {}}
         />
       </main>
     </div>
