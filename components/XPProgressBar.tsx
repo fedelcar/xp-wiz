@@ -36,30 +36,21 @@ export function XPProgressBar({ entries, completed, withScheduled, withPlanned, 
   const pctRaw = (xp: number) => (xp / cap) * 100;
 
   // Per-entry segments (cumulative, in date order)
-  const completedEntries = [...entries.filter(e => e.status === "completed")].sort((a, b) => a.date.localeCompare(b.date));
-  const scheduledEntries = [...entries.filter(e => e.status === "scheduled")].sort((a, b) => a.date.localeCompare(b.date));
+  const byDate = (a: XpEntry, b: XpEntry) => a.date.localeCompare(b.date);
+  const hasXp = (e: XpEntry) => e.xp + (e.safXp ?? 0) > 0;
 
   let cumXp = 0;
-  const completedSegs: Seg[] = completedEntries
-    .filter(e => e.xp + (e.safXp ?? 0) > 0)
-    .map(e => {
+  const toSegs = (list: XpEntry[]): Seg[] =>
+    list.filter(hasXp).map(e => {
       const xp = e.xp + (e.safXp ?? 0);
       const seg: Seg = { id: e.id, label: e.entryName ?? e.destination, xp, date: e.date, left: pctRaw(cumXp), width: pctRaw(xp) };
       cumXp += xp;
       return seg;
     });
 
-  const scheduledSegs: Seg[] = scheduledEntries
-    .filter(e => e.xp + (e.safXp ?? 0) > 0)
-    .map(e => {
-      const xp = e.xp + (e.safXp ?? 0);
-      const seg: Seg = { id: e.id, label: e.entryName ?? e.destination, xp, date: e.date, left: pctRaw(cumXp), width: pctRaw(xp) };
-      cumXp += xp;
-      return seg;
-    });
-
-  const plannedLeft = pctRaw(cumXp);
-  const plannedWidth = pctRaw(plannedOnly);
+  const completedSegs = toSegs([...entries.filter(e => e.status === "completed")].sort(byDate));
+  const scheduledSegs = toSegs([...entries.filter(e => e.status === "scheduled")].sort(byDate));
+  const plannedSegs = toSegs([...entries.filter(e => e.status === "planned")].sort(byDate));
 
   function handleSegClick(e: React.MouseEvent, seg: Seg) {
     e.stopPropagation();
@@ -103,13 +94,17 @@ export function XPProgressBar({ entries, completed, withScheduled, withPlanned, 
 
         {/* Track */}
         <div className="relative h-7 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
-          {/* Planned (single block) */}
-          {plannedOnly > 0 && (
+          {/* Planned segments */}
+          {plannedSegs.map((seg, i) => (
             <div
-              className="absolute h-full bg-amber-400/60"
-              style={{ left: `${plannedLeft}%`, width: `${plannedWidth}%` }}
+              key={seg.id}
+              className={`absolute h-full bg-amber-400/60 cursor-pointer hover:bg-amber-400/80 transition-colors ${i > 0 ? "border-l border-white/30" : ""}`}
+              style={{ left: `${seg.left}%`, width: `${Math.max(seg.width, 0.3)}%` }}
+              onMouseEnter={() => setHovered(seg)}
+              onMouseLeave={() => setHovered(null)}
+              onClick={e => handleSegClick(e, seg)}
             />
-          )}
+          ))}
 
           {/* Scheduled segments */}
           {scheduledSegs.map((seg, i) => (
