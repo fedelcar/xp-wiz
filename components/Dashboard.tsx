@@ -255,6 +255,7 @@ export function Dashboard() {
 
         {/* Summary cards */}
         <MetricCards
+          entries={yearEntries}
           completed={summary.completed}
           withScheduled={summary.withScheduled}
           withPlanned={summary.withPlanned}

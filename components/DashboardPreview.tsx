@@ -119,6 +119,7 @@ export function DashboardPreview() {
         )}
 
         <MetricCards
+          entries={yearEntries}
           completed={summary.completed}
           withScheduled={summary.withScheduled}
           withPlanned={summary.withPlanned}

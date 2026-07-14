@@ -1,9 +1,12 @@
 "use client";
 
 import { getVisibleTiers, type TierName } from "@/lib/xp-utils";
+import type { XpEntry } from "@/lib/db/schema";
+import { format } from "date-fns";
 import { TrendingUp, CheckCircle, Calendar, Star } from "lucide-react";
 
 interface MetricCardsProps {
+  entries: XpEntry[];
   completed: number;
   withScheduled: number;
   withPlanned: number;
@@ -11,7 +14,21 @@ interface MetricCardsProps {
   carryoverXp?: number;
 }
 
-export function MetricCards({ completed, withScheduled, withPlanned, hiddenTiers = [], carryoverXp = 0 }: MetricCardsProps) {
+// For a tier reached only via future XP, find the scheduled/planned entry
+// whose cumulative XP (in date order) first crosses the threshold.
+function crossingEntry(entries: XpEntry[], startXp: number, threshold: number): XpEntry | null {
+  const future = entries
+    .filter((e) => e.status === "scheduled" || e.status === "planned")
+    .sort((a, b) => a.date.localeCompare(b.date));
+  let cum = startXp;
+  for (const e of future) {
+    cum += e.xp + (e.safXp ?? 0);
+    if (cum >= threshold) return e;
+  }
+  return null;
+}
+
+export function MetricCards({ entries, completed, withScheduled, withPlanned, hiddenTiers = [], carryoverXp = 0 }: MetricCardsProps) {
   const visibleTiers = getVisibleTiers(hiddenTiers);
   const nextUnreached = visibleTiers.find((t) => withPlanned < t.xp);
 
@@ -83,15 +100,32 @@ export function MetricCards({ completed, withScheduled, withPlanned, hiddenTiers
           <div className={`grid gap-4`} style={{ gridTemplateColumns: `repeat(${visibleTiers.length}, 1fr)` }}>
             {visibleTiers.map((tier) => {
               const gap = Math.max(0, tier.xp - withPlanned);
-              const reached = withPlanned >= tier.xp;
+              const alreadyReached = completed >= tier.xp;
+              const willReach = !alreadyReached && withPlanned >= tier.xp;
+              const cross = willReach ? crossingEntry(entries, completed, tier.xp) : null;
               return (
                 <div key={tier.name} className="text-center space-y-1">
                   <div className={`text-xs font-semibold uppercase tracking-widest ${tier.color}`}>
                     {tier.name}
                   </div>
                   <div className="text-xs text-[rgb(var(--muted))]">{tier.xp} XP</div>
-                  {reached ? (
+                  {alreadyReached ? (
                     <div className="text-sm font-bold text-green-500">✓ Reached</div>
+                  ) : willReach ? (
+                    cross ? (
+                      <div className="space-y-0.5">
+                        <div className="text-sm font-bold text-af-sky">
+                          {cross.status === "scheduled" ? "Scheduled" : "Planned"}
+                        </div>
+                        <div className="text-[11px] text-[rgb(var(--muted))] leading-tight">
+                          via <span className="font-medium text-[rgb(var(--text))]">{cross.entryName ?? cross.destination}</span>
+                          <br />
+                          {format(new Date(cross.date + "T00:00:00"), "dd MMM yyyy")}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm font-bold text-af-sky">Projected ✓</div>
+                    )
                   ) : (
                     <div className="text-sm font-bold text-[rgb(var(--text))]">−{gap} XP</div>
                   )}
