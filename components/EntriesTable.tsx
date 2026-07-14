@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { XpEntry } from "@/lib/db/schema";
 import { format } from "date-fns";
-import { ArrowUpDown, Pencil, Trash2, ArrowUp, ArrowDown, Leaf } from "lucide-react";
+import { ArrowUpDown, Pencil, Trash2, ArrowUp, ArrowDown, Leaf, CheckCircle2, CalendarClock } from "lucide-react";
 
 type SortKey = "date" | "destination" | "xp" | "status";
 type SortDir = "asc" | "desc";
@@ -12,7 +12,11 @@ interface EntriesTableProps {
   entries: XpEntry[];
   onEdit: (entry: XpEntry) => void;
   onDelete: (id: number) => Promise<void>;
+  onStatusChange: (id: number, status: "completed" | "scheduled") => Promise<void>;
+  onFieldChange: (id: number, updates: { cabinClass?: string; xp?: number }) => Promise<void>;
 }
+
+type EditingCell = { id: number; field: "class" | "xp"; value: string } | null;
 
 const STATUS_BADGE: Record<string, string> = {
   completed: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400",
@@ -33,10 +37,20 @@ const CLASS_LABEL: Record<string, string> = {
   first: "1st",
 };
 
-export function EntriesTable({ entries, onEdit, onDelete }: EntriesTableProps) {
+export function EntriesTable({ entries, onEdit, onDelete, onStatusChange, onFieldChange }: EntriesTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [deleting, setDeleting] = useState<number | null>(null);
+  const [editing, setEditing] = useState<EditingCell>(null);
+
+  async function commitEdit() {
+    if (!editing) return;
+    const updates = editing.field === "class"
+      ? { cabinClass: editing.value }
+      : { xp: parseInt(editing.value) || 0 };
+    setEditing(null);
+    await onFieldChange(editing.id, updates);
+  }
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -131,27 +145,85 @@ export function EntriesTable({ entries, onEdit, onDelete }: EntriesTableProps) {
                     <span className="text-[rgb(var(--muted))]">→</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-[rgb(var(--muted))] text-xs whitespace-nowrap">
-                  {entry.cabinClass
-                    ? entry.returnCabinClass && entry.returnCabinClass !== entry.cabinClass
-                      ? <span title={`Outbound: ${entry.cabinClass} / Return: ${entry.returnCabinClass}`}>
-                          {CLASS_LABEL[entry.cabinClass]}
-                          <span className="text-[rgb(var(--border))] mx-0.5">/</span>
-                          {CLASS_LABEL[entry.returnCabinClass]}
-                        </span>
-                      : CLASS_LABEL[entry.cabinClass]
-                    : "—"}
+                <td className="px-4 py-3 text-xs whitespace-nowrap">
+                  {editing?.id === entry.id && editing.field === "class" ? (
+                    <select
+                      autoFocus
+                      value={editing.value}
+                      onChange={e => setEditing({ ...editing, value: e.target.value })}
+                      onBlur={commitEdit}
+                      onKeyDown={e => e.key === "Enter" && commitEdit()}
+                      className="bg-[rgb(var(--surface))] border border-af-sky rounded px-1 py-0.5 text-xs text-[rgb(var(--text))] focus:outline-none"
+                    >
+                      <option value="economy">Eco</option>
+                      <option value="comfort">Cmft</option>
+                      <option value="business">Biz</option>
+                      <option value="first">1st</option>
+                    </select>
+                  ) : (
+                    <button
+                      onClick={() => setEditing({ id: entry.id, field: "class", value: entry.cabinClass ?? "economy" })}
+                      className="text-[rgb(var(--muted))] hover:text-[rgb(var(--text))] hover:underline transition-colors text-left"
+                    >
+                      {entry.cabinClass
+                        ? entry.returnCabinClass && entry.returnCabinClass !== entry.cabinClass
+                          ? <span title={`Outbound: ${entry.cabinClass} / Return: ${entry.returnCabinClass}`}>
+                              {CLASS_LABEL[entry.cabinClass]}
+                              <span className="text-[rgb(var(--border))] mx-0.5">/</span>
+                              {CLASS_LABEL[entry.returnCabinClass]}
+                            </span>
+                          : CLASS_LABEL[entry.cabinClass]
+                        : "—"}
+                    </button>
+                  )}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`badge ${STATUS_BADGE[entry.status ?? "planned"]}`}>
-                    {entry.status}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`badge ${STATUS_BADGE[entry.status ?? "planned"]}`}>
+                      {entry.status}
+                    </span>
+                    {entry.status === "planned" && (
+                      <button
+                        onClick={() => onStatusChange(entry.id, "scheduled")}
+                        title="Mark as scheduled"
+                        className="p-0.5 rounded text-blue-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                      >
+                        <CalendarClock className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {entry.status === "scheduled" && (
+                      <button
+                        onClick={() => onStatusChange(entry.id, "completed")}
+                        title="Mark as completed"
+                        className="p-0.5 rounded text-green-500 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-right font-bold tabular-nums text-[rgb(var(--text))]">
-                  {entry.xp + (entry.safXp ?? 0)}
-                  {entry.hasSaf && entry.safXp ? (
-                    <span className="text-emerald-500 font-normal text-xs ml-1">+{entry.safXp}</span>
-                  ) : null}
+                  {editing?.id === entry.id && editing.field === "xp" ? (
+                    <input
+                      autoFocus
+                      type="number"
+                      value={editing.value}
+                      onChange={e => setEditing({ ...editing, value: e.target.value })}
+                      onBlur={commitEdit}
+                      onKeyDown={e => { if (e.key === "Enter") commitEdit(); if (e.key === "Escape") setEditing(null); }}
+                      className="w-16 bg-[rgb(var(--surface))] border border-af-sky rounded px-1.5 py-0.5 text-xs text-right text-[rgb(var(--text))] focus:outline-none"
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setEditing({ id: entry.id, field: "xp", value: String(entry.xp) })}
+                      className="hover:underline transition-colors tabular-nums"
+                    >
+                      {entry.xp + (entry.safXp ?? 0)}
+                      {entry.hasSaf && entry.safXp ? (
+                        <span className="text-emerald-500 font-normal text-xs ml-1">+{entry.safXp}</span>
+                      ) : null}
+                    </button>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">

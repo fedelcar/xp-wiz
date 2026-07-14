@@ -123,6 +123,24 @@ export function Dashboard() {
     await loadEntries();
   }
 
+  async function handleStatusChange(id: number, status: "completed" | "scheduled") {
+    await fetch(`/api/entries/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+      headers: { "Content-Type": "application/json" },
+    });
+    await loadEntries();
+  }
+
+  async function handleFieldChange(id: number, updates: { cabinClass?: string; xp?: number }) {
+    await fetch(`/api/entries/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(updates),
+      headers: { "Content-Type": "application/json" },
+    });
+    await loadEntries();
+  }
+
   async function handleSaveSettings(month: number, day: number, newHiddenTiers: TierName[], calendarIcsUrl: string) {
     await fetch("/api/settings", {
       method: "PUT",
@@ -221,14 +239,18 @@ export function Dashboard() {
           />
         )}
 
-        {/* Add/Edit form */}
-        {showForm && (
-          <EntryForm
-            entry={editEntry}
-            defaultYear={editEntry ? undefined : activeYear}
-            onSave={handleSaveEntry}
-            onCancel={() => { setShowForm(false); setEditEntry(null); }}
-          />
+        {/* Add form modal (new entries) */}
+        {showForm && !editEntry && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => { setShowForm(false); }}>
+            <div onClick={e => e.stopPropagation()} className="w-full max-w-lg">
+              <EntryForm
+                entry={null}
+                defaultYear={activeYear}
+                onSave={handleSaveEntry}
+                onCancel={() => { setShowForm(false); }}
+              />
+            </div>
+          </div>
         )}
 
         {/* Summary cards */}
@@ -242,6 +264,7 @@ export function Dashboard() {
 
         {/* Progress bar */}
         <XPProgressBar
+          entries={yearEntries}
           completed={summary.completed}
           withScheduled={summary.withScheduled}
           withPlanned={summary.withPlanned}
@@ -291,11 +314,26 @@ export function Dashboard() {
           />
         )}
 
+        {/* Edit modal */}
+        {showForm && editEntry && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => { setShowForm(false); setEditEntry(null); }}>
+            <div onClick={e => e.stopPropagation()} className="w-full max-w-lg">
+              <EntryForm
+                entry={editEntry}
+                onSave={handleSaveEntry}
+                onCancel={() => { setShowForm(false); setEditEntry(null); }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Entries table */}
         <EntriesTable
           entries={yearEntries}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onStatusChange={handleStatusChange}
+          onFieldChange={handleFieldChange}
         />
 
         {/* SAF summary */}

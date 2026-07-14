@@ -13,23 +13,25 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
   const body = await req.json();
 
+  // Only update fields explicitly present in the request body
+  const set: Record<string, unknown> = {};
+  if ("date" in body) set.date = body.date;
+  if ("destination" in body) set.destination = body.destination;
+  if ("isReturn" in body) set.isReturn = body.isReturn;
+  if ("status" in body) set.status = body.status;
+  if ("entryType" in body) set.entryType = body.entryType;
+  if ("cabinClass" in body) set.cabinClass = body.cabinClass;
+  if ("returnCabinClass" in body) set.returnCabinClass = body.returnCabinClass ?? null;
+  if ("xp" in body) set.xp = body.xp;
+  if ("hasSaf" in body) set.hasSaf = body.hasSaf;
+  if ("safXp" in body) set.safXp = body.safXp;
+  if ("safCostEur" in body) set.safCostEur = body.safCostEur?.toString();
+  if ("entryName" in body) set.entryName = body.entryName;
+  if ("isRecurring" in body) set.isRecurring = body.isRecurring;
+
   const [entry] = await db
     .update(xpEntries)
-    .set({
-      date: body.date,
-      destination: body.destination,
-      isReturn: body.isReturn,
-      status: body.status,
-      entryType: body.entryType,
-      cabinClass: body.cabinClass,
-      returnCabinClass: body.returnCabinClass ?? null,
-      xp: body.xp,
-      hasSaf: body.hasSaf,
-      safXp: body.safXp,
-      safCostEur: body.safCostEur?.toString(),
-      entryName: body.entryName,
-      isRecurring: body.isRecurring,
-    })
+    .set(set)
     .where(and(eq(xpEntries.id, parseInt(id)), eq(xpEntries.userId, session.user.id)))
     .returning();
 

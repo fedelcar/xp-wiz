@@ -1,25 +1,76 @@
 "use client";
 
+import { useState } from "react";
+import { format } from "date-fns";
 import { getVisibleTiers, MAX_DISPLAY_XP, type TierName } from "@/lib/xp-utils";
+import type { XpEntry } from "@/lib/db/schema";
 
 interface XPProgressBarProps {
+  entries: XpEntry[];
   completed: number;
   withScheduled: number;
   withPlanned: number;
   hiddenTiers?: TierName[];
 }
 
-export function XPProgressBar({ completed, withScheduled, withPlanned, hiddenTiers = [] }: XPProgressBarProps) {
+interface Seg {
+  id: number;
+  label: string;
+  xp: number;
+  date: string;
+  left: number;
+  width: number;
+}
+
+export function XPProgressBar({ entries, completed, withScheduled, withPlanned, hiddenTiers = [] }: XPProgressBarProps) {
+  const [hovered, setHovered] = useState<Seg | null>(null);
+
   const visibleTiers = getVisibleTiers(hiddenTiers);
-  const cap = visibleTiers.length > 0 ? visibleTiers[visibleTiers.length - 1].xp : MAX_DISPLAY_XP;
+  const lastTierXp = visibleTiers.length > 0 ? visibleTiers[visibleTiers.length - 1].xp : MAX_DISPLAY_XP;
+  // Extend cap by ~15% when XP exceeds the threshold so overage is visible
+  const cap = Math.max(lastTierXp, Math.ceil(withPlanned * 1.15 / 10) * 10);
   const scheduledOnly = withScheduled - completed;
   const plannedOnly = withPlanned - withScheduled;
 
   const pct = (xp: number) => Math.min(100, (xp / cap) * 100);
+  const pctRaw = (xp: number) => (xp / cap) * 100;
+
+  // Per-entry segments (cumulative, in date order)
+  const completedEntries = [...entries.filter(e => e.status === "completed")].sort((a, b) => a.date.localeCompare(b.date));
+  const scheduledEntries = [...entries.filter(e => e.status === "scheduled")].sort((a, b) => a.date.localeCompare(b.date));
+
+  let cumXp = 0;
+  const completedSegs: Seg[] = completedEntries
+    .filter(e => e.xp + (e.safXp ?? 0) > 0)
+    .map(e => {
+      const xp = e.xp + (e.safXp ?? 0);
+      const seg: Seg = { id: e.id, label: e.entryName ?? e.destination, xp, date: e.date, left: pctRaw(cumXp), width: pctRaw(xp) };
+      cumXp += xp;
+      return seg;
+    });
+
+  const scheduledSegs: Seg[] = scheduledEntries
+    .filter(e => e.xp + (e.safXp ?? 0) > 0)
+    .map(e => {
+      const xp = e.xp + (e.safXp ?? 0);
+      const seg: Seg = { id: e.id, label: e.entryName ?? e.destination, xp, date: e.date, left: pctRaw(cumXp), width: pctRaw(xp) };
+      cumXp += xp;
+      return seg;
+    });
+
+  const plannedLeft = pctRaw(cumXp);
+  const plannedWidth = pctRaw(plannedOnly);
+
+  function handleSegClick(e: React.MouseEvent, seg: Seg) {
+    e.stopPropagation();
+    setHovered(prev => prev?.id === seg.id ? null : seg);
+  }
+
+  const tooltipLeft = hovered ? Math.min(Math.max(hovered.left + hovered.width / 2, 8), 92) : 50;
 
   return (
     <div className="card p-5 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-sm font-semibold text-[rgb(var(--text))]">Status Progress</h2>
         <div className="flex items-center gap-4 text-xs text-[rgb(var(--muted))]">
           <span className="flex items-center gap-1.5">
@@ -37,60 +88,79 @@ export function XPProgressBar({ completed, withScheduled, withPlanned, hiddenTie
         </div>
       </div>
 
-      {/* Bar container */}
-      <div className="relative">
-        {/* Background track */}
-        <div className="h-7 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
-          {/* Planned segment — starts where scheduled ends */}
+      {/* Bar */}
+      <div className="relative" onClick={() => setHovered(null)}>
+        {/* Tooltip */}
+        {hovered && (
+          <div
+            className="absolute z-10 bottom-full mb-2 bg-slate-900 text-white text-xs rounded-lg px-2.5 py-1.5 pointer-events-none whitespace-nowrap shadow-lg"
+            style={{ left: `${tooltipLeft}%`, transform: "translateX(-50%)" }}
+          >
+            <div className="font-semibold">{hovered.label}</div>
+            <div className="text-slate-300">{hovered.xp} XP · {format(new Date(hovered.date + "T00:00:00"), "dd MMM yyyy")}</div>
+          </div>
+        )}
+
+        {/* Track */}
+        <div className="relative h-7 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden">
+          {/* Planned (single block) */}
           {plannedOnly > 0 && (
             <div
-              className="absolute h-full bg-amber-400/60 transition-all duration-700"
-              style={{ left: `${pct(withScheduled)}%`, width: `${pct(withPlanned) - pct(withScheduled)}%` }}
+              className="absolute h-full bg-amber-400/60"
+              style={{ left: `${plannedLeft}%`, width: `${plannedWidth}%` }}
             />
           )}
-          {/* Scheduled segment — starts where completed ends */}
-          {scheduledOnly > 0 && (
+
+          {/* Scheduled segments */}
+          {scheduledSegs.map((seg, i) => (
             <div
-              className="absolute h-full bg-af-sky/50 transition-all duration-700"
-              style={{ left: `${pct(completed)}%`, width: `${pct(withScheduled) - pct(completed)}%` }}
+              key={seg.id}
+              className={`absolute h-full bg-af-sky/50 cursor-pointer hover:bg-af-sky/70 transition-colors ${i > 0 ? "border-l border-white/30" : ""}`}
+              style={{ left: `${seg.left}%`, width: `${Math.max(seg.width, 0.3)}%` }}
+              onMouseEnter={() => setHovered(seg)}
+              onMouseLeave={() => setHovered(null)}
+              onClick={e => handleSegClick(e, seg)}
             />
-          )}
-          {/* Completed segment — always starts at 0 */}
-          {completed > 0 && (
+          ))}
+
+          {/* Completed segments */}
+          {completedSegs.map((seg, i) => (
             <div
-              className="absolute h-full bg-af-sky transition-all duration-700"
-              style={{ left: 0, width: `${pct(completed)}%` }}
+              key={seg.id}
+              className={`absolute h-full bg-af-sky cursor-pointer hover:brightness-110 transition-all ${i > 0 ? "border-l border-white/30" : ""}`}
+              style={{ left: `${seg.left}%`, width: `${Math.max(seg.width, 0.3)}%` }}
+              onMouseEnter={() => setHovered(seg)}
+              onMouseLeave={() => setHovered(null)}
+              onClick={e => handleSegClick(e, seg)}
             />
-          )}
+          ))}
         </div>
 
-        {/* Tier markers */}
+        {/* Tier markers overlaid on track */}
         {visibleTiers.map((tier) => {
           const pos = pct(tier.xp);
-          if (pos > 99) return null;
           return (
             <div
               key={tier.name}
-              className="absolute top-0 h-full flex flex-col items-center pointer-events-none"
+              className="absolute top-0 h-7 pointer-events-none"
               style={{ left: `${pos}%` }}
             >
-              <div className="w-0.5 h-full bg-[rgb(var(--border))] dark:bg-slate-600" />
+              <div className="w-0.5 h-full bg-white/50 dark:bg-white/25" />
             </div>
           );
         })}
       </div>
 
-      {/* Tier labels + XP numbers */}
+      {/* Tier labels */}
       <div className="relative h-8">
-        {visibleTiers.map((tier, i) => {
+        {visibleTiers.map((tier) => {
           const pos = pct(tier.xp);
           const reached = withPlanned >= tier.xp;
-          const isLast = i === visibleTiers.length - 1;
           return (
             <div
               key={tier.name}
-              className={`absolute flex flex-col items-center text-center ${isLast ? "-translate-x-full pr-1" : "-translate-x-1/2"}`}
-              style={{ left: isLast ? "100%" : `${pos}%` }}
+              className="absolute flex flex-col items-center text-center -translate-x-1/2"
+              style={{ left: `${pos}%` }}
             >
               <span className={`text-xs font-semibold ${reached ? tier.color : "text-[rgb(var(--muted))]"}`}>
                 {tier.name}
@@ -101,7 +171,7 @@ export function XPProgressBar({ completed, withScheduled, withPlanned, hiddenTie
         })}
       </div>
 
-      {/* Current values */}
+      {/* Summary row */}
       <div className="flex items-center gap-6 text-xs pt-1 border-t border-[rgb(var(--border))]">
         <div>
           <span className="text-[rgb(var(--muted))]">Completed: </span>
