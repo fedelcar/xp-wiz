@@ -64,11 +64,20 @@ export function getYearWindow(
   cutoffMonth: number,
   cutoffDay: number
 ): YearWindow {
-  // "Year N" = the membership period that ENDS at the cutoff date in year N.
-  // Runs from cutoff(N-1) up to (but not including) cutoff(N).
-  // e.g. with cutoff Oct 31: "2026" = Oct 31 2025 → Oct 30 2026
-  const start = new Date(year - 1, cutoffMonth - 1, cutoffDay);
-  const end = new Date(year, cutoffMonth - 1, cutoffDay - 1); // day 0 wraps to last day of prev month
+  // "Year N" = the membership period that ENDS in calendar year N, i.e. the
+  // period running from one cutoff date up to the day before the next cutoff.
+  //
+  // A period starting at cutoff(S) ends the day before cutoff(S+1):
+  //   - Jan 1 cutoff: that period is Jan 1 S → Dec 31 S, so it ends in year S
+  //     → Year N starts in year N (calendar year == membership year).
+  //   - any later cutoff (e.g. Oct 31): the period ends in the NEXT calendar
+  //     year, so Year N starts in year N-1 (e.g. "2027" = Oct 31 2026 → Oct 30 2027).
+  // Only a Jan 1 cutoff has its period end in the same year it starts, so that
+  // is the single case where the start year equals the label year.
+  const isJan1 = cutoffMonth === 1 && cutoffDay === 1;
+  const startYear = isJan1 ? year : year - 1;
+  const start = new Date(startYear, cutoffMonth - 1, cutoffDay);
+  const end = new Date(startYear + 1, cutoffMonth - 1, cutoffDay - 1); // day 0 wraps to last day of prev month
   end.setHours(23, 59, 59, 999);
   return { start, end };
 }
